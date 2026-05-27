@@ -79,6 +79,17 @@ function detectPeekUrl(sourceUrl: string, links: string[], html: string, markdow
   return m?.[0] ?? null;
 }
 
+const FAREHARBOR_RE = /https?:\/\/fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+\/?[^\s"'<>)]*/gi;
+
+function detectFareHarborUrl(sourceUrl: string, links: string[], html: string, markdown: string): string | null {
+  if (/fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+/i.test(sourceUrl)) return sourceUrl;
+  const fromLinks = links.find((l) => /fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+/i.test(l));
+  if (fromLinks) return fromLinks;
+  const hay = `${html}\n${markdown}`;
+  const m = hay.match(FAREHARBOR_RE);
+  return m?.[0] ?? null;
+}
+
 async function scrapePeekWidget(apiKey: string, peekUrl: string): Promise<PeekExtraction> {
   const peekSchema = {
     type: "object",
@@ -145,6 +156,72 @@ async function scrapePeekWidget(apiKey: string, peekUrl: string): Promise<PeekEx
   };
 }
 
+async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<PeekExtraction> {
+  const fhSchema = {
+    type: "object",
+    properties: {
+      title: { type: "string", description: "Activity / class name shown in the booking widget header" },
+      availableDates: {
+        type: "array",
+        description: "Every UPCOMING bookable date+time visible on the calendar — open ALL future months shown. Do NOT include past dates.",
+        items: {
+          type: "object",
+          properties: {
+            startLocal: {
+              type: "string",
+              description: "Local start datetime in ISO-8601 (America/New_York). Combine the date with the session start time shown on that tile (e.g. '8:00 AM', '6:00 PM').",
+            },
+            endLocal: { type: ["string", "null"] },
+            priceUsd: { type: ["number", "null"] },
+            soldOut: { type: "boolean" },
+          },
+          required: ["startLocal", "soldOut"],
+        },
+      },
+    },
+    required: ["title", "availableDates"],
+  };
+
+  const today = new Date().toISOString().slice(0, 10);
+  const res = await firecrawlScrape(apiKey, fhUrl, {
+    formats: [
+      "markdown",
+      {
+        type: "json",
+        schema: fhSchema,
+        prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session shown in the FareHarbor calendar widget — include all visible future months. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles.`,
+      },
+    ],
+    waitFor: 6000,
+    onlyMainContent: false,
+  });
+
+  const j = (res.json ?? {}) as { title?: unknown; availableDates?: unknown };
+  const datesRaw = Array.isArray(j.availableDates) ? (j.availableDates as unknown[]) : [];
+  const now = Date.now();
+  const dates = datesRaw
+    .map((d) => {
+      const o = d as { startLocal?: unknown; endLocal?: unknown; priceUsd?: unknown; soldOut?: unknown };
+      const startsAt = safeIso(o.startLocal);
+      if (!startsAt) return null;
+      // Future-only guard
+      if (new Date(startsAt).getTime() < now - 12 * 3600 * 1000) return null;
+      const price = typeof o.priceUsd === "number" ? `$${o.priceUsd}` : null;
+      return {
+        startsAt,
+        endsAt: safeIso(o.endLocal),
+        priceNote: price,
+        soldOut: o.soldOut === true,
+      };
+    })
+    .filter((x): x is PeekExtraction["dates"][number] => x !== null);
+
+  return {
+    title: typeof j.title === "string" && j.title.trim() ? j.title.trim() : null,
+    dates,
+  };
+}
+
 const CATEGORIES = ["music", "food", "comedy", "art", "outdoors", "theater", "film"] as const;
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 const PRICE_TIERS = ["free", "$", "$$", "$$$"] as const;
@@ -164,6 +241,7 @@ export interface ParsedActivity {
   notes: string | null;
   dates: { startsAt: string; endsAt: string | null }[];
   sourceUrl: string;
+  durationMinutes: number | null;
 }
 
 function coerce<T extends readonly string[]>(allowed: T, v: unknown, fallback: T[number]): T[number] {
@@ -220,6 +298,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
 
     // 2) If a Peek booking widget is embedded, use the adapter for title + dates
     const peekUrl = detectPeekUrl(url, allLinks, html, markdown);
+    const fhUrl = peekUrl ? null : detectFareHarborUrl(url, allLinks, html, markdown);
     let peekData: PeekExtraction | null = null;
     if (peekUrl) {
       try {
@@ -227,12 +306,21 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
       } catch (e) {
         console.error("Peek adapter failed, falling back to generic parse:", e);
       }
+    } else if (fhUrl) {
+      try {
+        peekData = await scrapeFareHarborWidget(firecrawlKey, fhUrl);
+      } catch (e) {
+        console.error("FareHarbor adapter failed, falling back to generic parse:", e);
+      }
     }
 
     // 3) Ask Lovable AI to extract the rest (category, borough, venue, tags…)
     // If Peek gave us authoritative title/dates, pin them in the prompt.
+    const todayIso = new Date().toISOString().slice(0, 10);
     const prompt = `You extract NYC event/activity details from a scraped web page.
 Return STRICT JSON only — no commentary, no markdown fences.
+
+TODAY is ${todayIso}. Only include FUTURE dates (>= today). NEVER include past dates, article publish dates, header/byline dates, "posted on" timestamps, or copyright years.
 
 ${
   hint
@@ -261,7 +349,8 @@ Schema:
   "kind": one of ${KINDS.join(" | ")},  // one_time = single date, recurring = multiple/weekly, timeless = no fixed date (e.g. restaurant, park)
   "tags": string[],             // 0-6 short lowercase keywords
   "notes": string | null,       // one short sentence summary
-  "dates": [ { "startsAt": ISO-8601 string in America/New_York, "endsAt": ISO-8601 or null } ]
+  "dates": [ { "startsAt": ISO-8601 string in America/New_York, "endsAt": ISO-8601 or null } ],
+  "durationMinutes": number | null  // typical session length in minutes (e.g. "3-4 hours" -> 210, "90 min" -> 90)
 }
 
 Use null/empty when truly unknown. If multiple show times exist, include up to 6 in dates.
@@ -350,6 +439,10 @@ ${markdown.slice(0, 8000)}`;
       notes: typeof raw.notes === "string" && raw.notes.trim() ? raw.notes.trim() : null,
       dates,
       sourceUrl: url,
+      durationMinutes:
+        typeof raw.durationMinutes === "number" && Number.isFinite(raw.durationMinutes) && raw.durationMinutes > 0
+          ? Math.round(raw.durationMinutes)
+          : null,
     };
 
     // Cache it (best-effort)
@@ -381,6 +474,7 @@ const SaveInput = z.object({
   notes: z.string().max(1000).nullable().optional(),
   tags: z.array(z.string().max(40)).max(12).default([]),
   dates: z.array(DateInput).max(20).default([]),
+  durationMinutes: z.number().int().min(1).max(60 * 24 * 14).nullable().optional(),
 });
 
 export const createActivity = createServerFn({ method: "POST" })
@@ -404,6 +498,7 @@ export const createActivity = createServerFn({ method: "POST" })
       image_seed: seed,
       notes: data.notes ?? null,
       tags: data.tags,
+      duration_minutes: data.durationMinutes ?? null,
       dates: data.dates.map((d, i) => ({
         id: `d${i}-${Math.random().toString(36).slice(2, 8)}`,
         startsAt: d.startsAt,
