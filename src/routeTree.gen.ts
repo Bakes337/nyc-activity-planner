@@ -15,6 +15,7 @@ import { Route as ChatRouteImport } from './routes/chat'
 import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
+import { Route as ActivitiesIdRouteImport } from './routes/activities.$id'
 
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
@@ -46,6 +47,11 @@ const IndexRoute = IndexRouteImport.update({
   path: '/',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ActivitiesIdRoute = ActivitiesIdRouteImport.update({
+  id: '/activities/$id',
+  path: '/activities/$id',
+  getParentRoute: () => rootRouteImport,
+} as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -54,6 +60,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -62,6 +69,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -71,12 +79,27 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
-  fullPaths: '/' | '/add' | '/calendar' | '/chat' | '/playlists' | '/settings'
+  fullPaths:
+    | '/'
+    | '/add'
+    | '/calendar'
+    | '/chat'
+    | '/playlists'
+    | '/settings'
+    | '/activities/$id'
   fileRoutesByTo: FileRoutesByTo
-  to: '/' | '/add' | '/calendar' | '/chat' | '/playlists' | '/settings'
+  to:
+    | '/'
+    | '/add'
+    | '/calendar'
+    | '/chat'
+    | '/playlists'
+    | '/settings'
+    | '/activities/$id'
   id:
     | '__root__'
     | '/'
@@ -85,6 +108,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/playlists'
     | '/settings'
+    | '/activities/$id'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -94,6 +118,7 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   PlaylistsRoute: typeof PlaylistsRoute
   SettingsRoute: typeof SettingsRoute
+  ActivitiesIdRoute: typeof ActivitiesIdRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -140,6 +165,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof IndexRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/activities/$id': {
+      id: '/activities/$id'
+      path: '/activities/$id'
+      fullPath: '/activities/$id'
+      preLoaderRoute: typeof ActivitiesIdRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -150,6 +182,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   PlaylistsRoute: PlaylistsRoute,
   SettingsRoute: SettingsRoute,
+  ActivitiesIdRoute: ActivitiesIdRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
