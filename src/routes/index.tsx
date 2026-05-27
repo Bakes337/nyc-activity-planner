@@ -12,6 +12,8 @@ import {
 } from "../lib/data";
 import { listActivities } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
+import { listSuggestions } from "../lib/organizers.functions";
+import { Link } from "@tanstack/react-router";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -61,10 +63,16 @@ function isThisMonth(d: Date) {
 
 function Index() {
   const fetchList = useServerFn(listActivities);
+  const fetchSuggestions = useServerFn(listSuggestions);
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
     queryFn: () => fetchList(),
   });
+  const { data: suggestionRows = [] } = useQuery({
+    queryKey: ["suggestions"],
+    queryFn: () => fetchSuggestions(),
+  });
+  const suggestionCount = (suggestionRows as unknown[]).length;
   const activities = useMemo(
     () => (rows as ActivityRow[]).map(rowToActivity),
     [rows],
@@ -116,6 +124,26 @@ function Index() {
         title="NYC, on your terms"
         subtitle={`${activities.length} bookmarked idea${activities.length === 1 ? "" : "s"} — filter, dream, plan.`}
       />
+
+      <div className="flex items-center justify-end gap-2 px-5 pb-1 text-[11px] font-semibold">
+        <Link
+          to="/suggestions"
+          className={
+            "rounded-full px-3 py-1 ring-1 " +
+            (suggestionCount > 0
+              ? "bg-[color:var(--neon-pink)] text-white ring-transparent"
+              : "bg-white/70 text-[color:var(--ink)] ring-[color:var(--border)]")
+          }
+        >
+          ✉ Suggestions{suggestionCount > 0 ? ` (${suggestionCount})` : ""}
+        </Link>
+        <Link
+          to="/settings"
+          className="rounded-full bg-white/70 px-3 py-1 text-[color:var(--ink)] ring-1 ring-[color:var(--border)]"
+        >
+          ⚙ Settings
+        </Link>
+      </div>
 
       <div className="sticky top-0 z-10 px-3 pb-3 pt-1">
         <div
