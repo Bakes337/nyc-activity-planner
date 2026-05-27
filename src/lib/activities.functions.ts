@@ -3,6 +3,148 @@ import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
 
+// ---------- Firecrawl helpers ----------
+
+interface FirecrawlScrapeResult {
+  markdown: string;
+  html: string;
+  links: string[];
+  title: string;
+  description: string;
+  json: unknown;
+}
+
+type FirecrawlFormat =
+  | "markdown"
+  | "html"
+  | "links"
+  | { type: "json"; schema?: unknown; prompt?: string };
+
+interface FirecrawlOpts {
+  formats: FirecrawlFormat[];
+  onlyMainContent?: boolean;
+  waitFor?: number;
+}
+
+async function firecrawlScrape(
+  apiKey: string,
+  url: string,
+  opts: FirecrawlOpts,
+): Promise<FirecrawlScrapeResult> {
+  const res = await fetch("https://api.firecrawl.dev/v2/scrape", {
+    method: "POST",
+    headers: { Authorization: `Bearer ${apiKey}`, "Content-Type": "application/json" },
+    body: JSON.stringify({ url, ...opts }),
+  });
+  if (!res.ok) {
+    const txt = await res.text();
+    throw new Error(`Firecrawl ${res.status}: ${txt.slice(0, 200)}`);
+  }
+  const body = (await res.json()) as {
+    data?: Record<string, unknown>;
+    markdown?: unknown;
+    html?: unknown;
+    links?: unknown;
+    json?: unknown;
+    metadata?: { title?: unknown; description?: unknown };
+  };
+  const d = (body.data ?? body) as Record<string, unknown> & {
+    metadata?: { title?: unknown; description?: unknown };
+  };
+  return {
+    markdown: typeof d.markdown === "string" ? d.markdown : "",
+    html: typeof d.html === "string" ? d.html : "",
+    links: Array.isArray(d.links) ? (d.links as unknown[]).filter((x): x is string => typeof x === "string") : [],
+    title: typeof d.metadata?.title === "string" ? d.metadata.title : "",
+    description: typeof d.metadata?.description === "string" ? d.metadata.description : "",
+    json: d.json ?? null,
+  };
+}
+
+// ---------- Peek adapter ----------
+
+interface PeekExtraction {
+  title: string | null;
+  dates: { startsAt: string; endsAt: string | null; priceNote: string | null; soldOut: boolean }[];
+}
+
+const PEEK_HOST_RE = /https?:\/\/(?:book|www)\.peek\.com\/[^\s"'<>)]+/gi;
+
+function detectPeekUrl(sourceUrl: string, links: string[], html: string, markdown: string): string | null {
+  if (/(?:book|www)\.peek\.com\//i.test(sourceUrl)) return sourceUrl;
+  const fromLinks = links.find((l) => /(?:book|www)\.peek\.com\//i.test(l));
+  if (fromLinks) return fromLinks;
+  const hay = `${html}\n${markdown}`;
+  const m = hay.match(PEEK_HOST_RE);
+  return m?.[0] ?? null;
+}
+
+async function scrapePeekWidget(apiKey: string, peekUrl: string): Promise<PeekExtraction> {
+  const peekSchema = {
+    type: "object",
+    properties: {
+      title: { type: "string", description: "Activity / class name (the H1 inside the booking widget)" },
+      availableDates: {
+        type: "array",
+        description: "Every bookable date visible in the calendar, including future months if shown.",
+        items: {
+          type: "object",
+          properties: {
+            startLocal: {
+              type: "string",
+              description: "Local start datetime in ISO-8601 (America/New_York). Use the date plus the session start time if shown, otherwise 10:00 local.",
+            },
+            endLocal: { type: ["string", "null"], description: "Local end datetime in ISO-8601 if known, else null" },
+            priceUsd: { type: ["number", "null"] },
+            soldOut: { type: "boolean" },
+          },
+          required: ["startLocal", "soldOut"],
+        },
+      },
+    },
+    required: ["title", "availableDates"],
+  };
+
+  const res = await firecrawlScrape(apiKey, peekUrl, {
+    formats: [
+      "markdown",
+      {
+        type: "json",
+        schema: peekSchema,
+        prompt:
+          "Extract the activity title (the booking widget's H1) and every bookable date shown in the calendar. Include sold-out dates with soldOut=true. If a price is shown on a date tile (e.g. $265), put it in priceUsd.",
+      },
+    ],
+    waitFor: 4500,
+    onlyMainContent: false,
+  });
+
+  const j = (res.json ?? {}) as {
+    title?: unknown;
+    availableDates?: unknown;
+  };
+  const datesRaw = Array.isArray(j.availableDates) ? (j.availableDates as unknown[]) : [];
+  const dates = datesRaw
+    .map((d) => {
+      const o = d as { startLocal?: unknown; endLocal?: unknown; priceUsd?: unknown; soldOut?: unknown };
+      const startsAt = safeIso(o.startLocal);
+      if (!startsAt) return null;
+      const price = typeof o.priceUsd === "number" ? `$${o.priceUsd}` : null;
+      return {
+        startsAt,
+        endsAt: safeIso(o.endLocal),
+        priceNote: price,
+        soldOut: o.soldOut === true,
+      };
+    })
+    .filter((x): x is PeekExtraction["dates"][number] => x !== null);
+
+  return {
+    title: typeof j.title === "string" && j.title.trim() ? j.title.trim() : null,
+    dates,
+  };
+}
+
 const CATEGORIES = ["music", "food", "comedy", "art", "outdoors", "theater", "film"] as const;
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 const PRICE_TIERS = ["free", "$", "$$", "$$$"] as const;
@@ -57,35 +199,39 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
     const lovableKey = process.env.LOVABLE_API_KEY;
     if (!lovableKey) throw new Error("LOVABLE_API_KEY is not configured");
 
-    // 1) Scrape page → markdown
-    const scrapeRes = await fetch("https://api.firecrawl.dev/v2/scrape", {
-      method: "POST",
-      headers: {
-        Authorization: `Bearer ${firecrawlKey}`,
-        "Content-Type": "application/json",
-      },
-      body: JSON.stringify({
-        url,
-        formats: ["markdown"],
-        onlyMainContent: true,
-      }),
+    // 1) Scrape source page with links so we can detect embedded booking widgets
+    const initial = await firecrawlScrape(firecrawlKey, url, {
+      formats: ["markdown", "links"],
+      onlyMainContent: false,
+      waitFor: 2000,
     });
-    if (!scrapeRes.ok) {
-      const txt = await scrapeRes.text();
-      throw new Error(`Couldn't read that page (Firecrawl ${scrapeRes.status}): ${txt.slice(0, 200)}`);
-    }
-    const scrapeJson = (await scrapeRes.json()) as {
-      data?: { markdown?: string; metadata?: { title?: string; description?: string } };
-      markdown?: string;
-      metadata?: { title?: string; description?: string };
-    };
-    const markdown = scrapeJson.data?.markdown ?? scrapeJson.markdown ?? "";
-    const pageTitle = scrapeJson.data?.metadata?.title ?? scrapeJson.metadata?.title ?? "";
-    const pageDesc = scrapeJson.data?.metadata?.description ?? scrapeJson.metadata?.description ?? "";
+    const markdown = initial.markdown;
+    const pageTitle = initial.title;
+    const pageDesc = initial.description;
+    const allLinks: string[] = Array.isArray(initial.links) ? initial.links : [];
+    const html = initial.html ?? "";
 
-    // 2) Ask Lovable AI to extract structured fields
+    // 2) If a Peek booking widget is embedded, use the adapter for title + dates
+    const peekUrl = detectPeekUrl(url, allLinks, html, markdown);
+    let peekData: PeekExtraction | null = null;
+    if (peekUrl) {
+      try {
+        peekData = await scrapePeekWidget(firecrawlKey, peekUrl);
+      } catch (e) {
+        console.error("Peek adapter failed, falling back to generic parse:", e);
+      }
+    }
+
+    // 3) Ask Lovable AI to extract the rest (category, borough, venue, tags…)
+    // If Peek gave us authoritative title/dates, pin them in the prompt.
     const prompt = `You extract NYC event/activity details from a scraped web page.
 Return STRICT JSON only — no commentary, no markdown fences.
+
+IMPORTANT title rules:
+- Prefer the activity/event name (usually the H1 inside the booking widget or main content) over the site's <title> tag, which is often just the studio/venue brand.
+- Do not append the venue name to the title.
+${peekData?.title ? `- The authoritative title is: "${peekData.title}". Use it verbatim.` : ""}
+${peekData?.dates && peekData.dates.length ? `- The authoritative dates list is provided below — copy it into the "dates" field verbatim, do NOT invent or filter.` : ""}
 
 Schema:
 {
@@ -107,6 +253,7 @@ Use null/empty when truly unknown. If multiple show times exist, include up to 6
 Page title: ${pageTitle}
 Description: ${pageDesc}
 URL: ${url}
+${peekData ? `\n--- Peek booking widget (authoritative) ---\n${JSON.stringify(peekData, null, 2)}\n` : ""}
 
 --- Page content (markdown, truncated) ---
 ${markdown.slice(0, 8000)}`;
@@ -142,7 +289,7 @@ ${markdown.slice(0, 8000)}`;
     }
 
     const datesRaw = Array.isArray(raw.dates) ? (raw.dates as unknown[]) : [];
-    const dates = datesRaw
+    let dates = datesRaw
       .map((d) => {
         const o = d as { startsAt?: unknown; endsAt?: unknown };
         const startsAt = safeIso(o.startsAt);
@@ -152,14 +299,31 @@ ${markdown.slice(0, 8000)}`;
       .filter((x): x is { startsAt: string; endsAt: string | null } => x !== null)
       .slice(0, 8);
 
+    // If Peek returned dates, trust those over the LLM's output
+    if (peekData?.dates && peekData.dates.length) {
+      dates = peekData.dates
+        .map((d) => {
+          const startsAt = safeIso(d.startsAt);
+          return startsAt ? { startsAt, endsAt: safeIso(d.endsAt) } : null;
+        })
+        .filter((x): x is { startsAt: string; endsAt: string | null } => x !== null)
+        .slice(0, 20);
+    }
+
     const payload: ParsedActivity = {
-      title: typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : pageTitle || "Untitled",
+      title:
+        peekData?.title?.trim() ||
+        (typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "") ||
+        pageTitle ||
+        "Untitled",
       venue: typeof raw.venue === "string" ? raw.venue : "",
       neighborhood: typeof raw.neighborhood === "string" ? raw.neighborhood : "",
       borough: coerce(BOROUGHS, raw.borough, "Manhattan"),
       category: coerce(CATEGORIES, raw.category, "music"),
       priceTier: coerce(PRICE_TIERS, raw.priceTier, "$$"),
-      priceNote: typeof raw.priceNote === "string" && raw.priceNote.trim() ? raw.priceNote.trim() : null,
+      priceNote:
+        peekData?.dates?.find((d) => d.priceNote)?.priceNote ??
+        (typeof raw.priceNote === "string" && raw.priceNote.trim() ? raw.priceNote.trim() : null),
       kind: coerce(KINDS, raw.kind, dates.length > 1 ? "recurring" : dates.length === 1 ? "one_time" : "timeless"),
       tags: Array.isArray(raw.tags)
         ? (raw.tags as unknown[])
