@@ -220,48 +220,90 @@ async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<Pe
   };
 
   const today = new Date().toISOString().slice(0, 10);
-  const res = await firecrawlScrape(apiKey, fhUrl, {
-    formats: [
-      "markdown",
-      {
-        type: "json",
-        schema: fhSchema,
-        prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session shown in the FareHarbor calendar widget — include all visible future months. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles. If you cannot see specific time tiles, return availableDates: [].`,
-      },
-    ],
-    waitFor: 8000,
-    onlyMainContent: false,
-    actions: [
+  // FareHarbor calendar shows ~1 month at a time. We scrape the current view,
+  // then click the "next month" button N times to advance and re-scrape, so we
+  // collect availability across roughly the next 3 months.
+  const NEXT_MONTH_SELECTORS = [
+    'button[aria-label*="Next" i]',
+    'a[aria-label*="Next" i]',
+    'button[title*="Next" i]',
+    ".fh-button-next-month",
+    ".fh-calendar-next",
+    ".next-month",
+  ];
+  const clickNext = NEXT_MONTH_SELECTORS.map((selector) => ({
+    type: "click" as const,
+    selector,
+  }));
+
+  const scrapeMonth = async (monthsAhead: number) => {
+    const actions: FirecrawlOpts["actions"] = [
       { type: "wait", milliseconds: 4000 },
       { type: "scroll", direction: "down" },
-      { type: "wait", milliseconds: 2000 },
-    ],
-  });
+      { type: "wait", milliseconds: 1500 },
+    ];
+    for (let i = 0; i < monthsAhead; i++) {
+      // Try several common selectors — Firecrawl click actions silently skip
+      // selectors that don't match, so listing alternatives is safe.
+      actions.push(...clickNext, { type: "wait", milliseconds: 1500 });
+    }
+    return firecrawlScrape(apiKey, fhUrl, {
+      formats: [
+        "markdown",
+        {
+          type: "json",
+          schema: fhSchema,
+          prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session currently visible on the FareHarbor calendar. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles. If no time tiles are visible, return availableDates: [].`,
+        },
+      ],
+      waitFor: 8000,
+      onlyMainContent: false,
+      actions,
+    });
+  };
 
-  const j = (res.json ?? {}) as { title?: unknown; availableDates?: unknown };
-  const datesRaw = Array.isArray(j.availableDates) ? (j.availableDates as unknown[]) : [];
+  // Scrape current month + next 2 months in parallel
+  const results = await Promise.allSettled([
+    scrapeMonth(0),
+    scrapeMonth(1),
+    scrapeMonth(2),
+  ]);
+
   const now = Date.now();
-  const dates = datesRaw
-    .map((d) => {
+  const seen = new Set<string>();
+  const dates: PeekExtraction["dates"] = [];
+  let title: string | null = null;
+
+  for (const r of results) {
+    if (r.status !== "fulfilled") {
+      console.error("FareHarbor month scrape failed:", r.reason);
+      continue;
+    }
+    const j = (r.value.json ?? {}) as { title?: unknown; availableDates?: unknown };
+    if (!title && typeof j.title === "string" && j.title.trim()) {
+      title = j.title.trim();
+    }
+    const datesRaw = Array.isArray(j.availableDates) ? (j.availableDates as unknown[]) : [];
+    for (const d of datesRaw) {
       const o = d as { startLocal?: unknown; endLocal?: unknown; priceUsd?: unknown; soldOut?: unknown };
       const startsAt = safeIso(o.startLocal);
-      if (!startsAt) return null;
-      // Future-only guard
-      if (new Date(startsAt).getTime() < now - 12 * 3600 * 1000) return null;
+      if (!startsAt) continue;
+      if (new Date(startsAt).getTime() < now - 12 * 3600 * 1000) continue;
+      if (seen.has(startsAt)) continue;
+      seen.add(startsAt);
       const price = typeof o.priceUsd === "number" ? `$${o.priceUsd}` : null;
-      return {
+      dates.push({
         startsAt,
         endsAt: safeIso(o.endLocal),
         priceNote: price,
         soldOut: o.soldOut === true,
-      };
-    })
-    .filter((x): x is PeekExtraction["dates"][number] => x !== null);
+      });
+    }
+  }
 
-  return {
-    title: typeof j.title === "string" && j.title.trim() ? j.title.trim() : null,
-    dates,
-  };
+  dates.sort((a, b) => a.startsAt.localeCompare(b.startsAt));
+
+  return { title, dates };
 }
 
 const CATEGORIES = ["music", "food", "comedy", "art", "outdoors", "theater", "film"] as const;
@@ -310,7 +352,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
     const url = data.url.trim();
     const hint = (data.hint ?? "").trim();
     // bump this when extraction logic changes to invalidate old cached parses
-    const PARSER_VERSION = "v3-fh-actions";
+    const PARSER_VERSION = "v4-fh-3months";
     const cacheKey = hint
       ? `${url}\n#hint:${hint}\n#v:${PARSER_VERSION}`
       : `${url}\n#v:${PARSER_VERSION}`;
