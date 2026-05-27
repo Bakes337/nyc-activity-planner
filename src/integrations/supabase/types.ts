@@ -77,6 +77,104 @@ export type Database = {
         }
         Relationships: []
       }
+      followed_organizers: {
+        Row: {
+          created_at: string
+          filters: Json
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          name: string
+          organizer_id: string
+          source: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          name?: string
+          organizer_id: string
+          source?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          filters?: Json
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          name?: string
+          organizer_id?: string
+          source?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
+      organizer_suggestions: {
+        Row: {
+          borough: string
+          created_at: string
+          ends_at: string | null
+          external_id: string
+          id: string
+          image_url: string | null
+          is_sold_out: boolean
+          neighborhood: string
+          organizer_id: string
+          starts_at: string | null
+          status: string
+          title: string
+          url: string
+          venue: string
+        }
+        Insert: {
+          borough?: string
+          created_at?: string
+          ends_at?: string | null
+          external_id: string
+          id?: string
+          image_url?: string | null
+          is_sold_out?: boolean
+          neighborhood?: string
+          organizer_id: string
+          starts_at?: string | null
+          status?: string
+          title: string
+          url: string
+          venue?: string
+        }
+        Update: {
+          borough?: string
+          created_at?: string
+          ends_at?: string | null
+          external_id?: string
+          id?: string
+          image_url?: string | null
+          is_sold_out?: boolean
+          neighborhood?: string
+          organizer_id?: string
+          starts_at?: string | null
+          status?: string
+          title?: string
+          url?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "organizer_suggestions_organizer_id_fkey"
+            columns: ["organizer_id"]
+            isOneToOne: false
+            referencedRelation: "followed_organizers"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       scrape_cache: {
         Row: {
           created_at: string
