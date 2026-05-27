@@ -209,7 +209,7 @@ function CalendarPage() {
                       />
                       <div className="flex flex-1 items-center justify-between gap-3 px-3 py-2.5">
                         <div className="min-w-0">
-                          <p className="truncate font-display text-base leading-tight text-[color:var(--ink)]">
+                          <p className="font-display text-base leading-tight text-[color:var(--ink)]">
                             {activity.title}
                           </p>
                           <p className="truncate text-xs text-[color:var(--muted-foreground)]">
