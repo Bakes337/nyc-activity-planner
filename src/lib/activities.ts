@@ -17,6 +17,7 @@ export interface ActivityRow {
   notes: string | null;
   tags: string[] | null;
   dates: unknown;
+  duration_minutes: number | null;
   created_at: string;
   updated_at: string;
 }
@@ -39,5 +40,6 @@ export function rowToActivity(r: ActivityRow): Activity {
     notes: r.notes ?? undefined,
     tags: r.tags ?? [],
     dates: datesArr,
+    durationMinutes: r.duration_minutes ?? undefined,
   };
 }

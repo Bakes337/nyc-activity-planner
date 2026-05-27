@@ -1,3 +1,4 @@
+import { Link } from "@tanstack/react-router";
 import {
   type Activity,
   CATEGORY_META,
@@ -13,7 +14,11 @@ export function ActivityCard({ a }: { a: Activity }) {
   const soldOut = next?.isSoldOut;
 
   return (
-    <article className="paint-card flex flex-col">
+    <Link
+      to="/activities/$id"
+      params={{ id: a.id }}
+      className="paint-card flex flex-col text-left transition hover:-translate-y-0.5 hover:shadow-lg"
+    >
       <div
         className="relative aspect-[16/10] w-full"
         style={{ background: seedGradient(a.imageSeed) }}
@@ -79,6 +84,6 @@ export function ActivityCard({ a }: { a: Activity }) {
           )}
         </div>
       </div>
-    </article>
+    </Link>
   );
 }
