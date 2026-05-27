@@ -89,6 +89,7 @@ function AddPage() {
   const saveFn = useServerFn(createActivity);
 
   const [url, setUrl] = useState("");
+  const [hint, setHint] = useState("");
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
@@ -102,7 +103,12 @@ function AddPage() {
     setError(null);
     setParsing(true);
     try {
-      const parsed = await parseFn({ data: { url: url.trim() } });
+      const parsed = await parseFn({
+        data: {
+          url: url.trim(),
+          hint: hint.trim() || undefined,
+        },
+      });
       setDraft(fromParsed(parsed));
     } catch (e) {
       setError(e instanceof Error ? e.message : "Couldn't read that page.");
@@ -177,6 +183,17 @@ function AddPage() {
             >
               {parsing ? "Reading…" : "Parse"}
             </button>
+          </div>
+          <div className="mt-3">
+            <label className="text-[11px] font-bold uppercase tracking-wider text-[color:var(--cobalt)]">
+              Focus hint <span className="text-[color:var(--muted-foreground)] font-normal normal-case tracking-normal">(optional)</span>
+            </label>
+            <input
+              value={hint}
+              onChange={(e) => setHint(e.target.value)}
+              placeholder='e.g. "Buttercream Essentials 3" — pick a specific class on the page'
+              className="mt-1 w-full rounded-lg border border-[color:var(--border)] bg-[color:var(--cream)] px-3 py-2 text-sm outline-none focus:border-[color:var(--cobalt)]"
+            />
           </div>
           {!draft && (
             <button

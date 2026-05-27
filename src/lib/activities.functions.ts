@@ -180,15 +180,22 @@ function safeIso(s: unknown): string | null {
 }
 
 export const parseActivityUrl = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ url: z.string().url() }))
+  .inputValidator(
+    z.object({
+      url: z.string().url(),
+      hint: z.string().max(500).optional(),
+    }),
+  )
   .handler(async ({ data }): Promise<ParsedActivity> => {
     const url = data.url.trim();
+    const hint = (data.hint ?? "").trim();
+    const cacheKey = hint ? `${url}\n#hint:${hint}` : url;
 
     // Cache lookup
     const cached = await supabaseAdmin
       .from("scrape_cache")
       .select("payload")
-      .eq("url", url)
+      .eq("url", cacheKey)
       .maybeSingle();
     if (cached.data?.payload) {
       return cached.data.payload as unknown as ParsedActivity;
@@ -227,6 +234,15 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
     const prompt = `You extract NYC event/activity details from a scraped web page.
 Return STRICT JSON only — no commentary, no markdown fences.
 
+${
+  hint
+    ? `USER FOCUS HINT (highest priority): the user is specifically interested in: "${hint}".
+- If the page lists multiple classes/events, pick the one matching this hint and ignore the others.
+- Use this hint to choose the title, dates, and price. Prefer the section/heading whose name matches the hint over the page's overall title.
+- If only the matching variant's dates should be returned, return only those dates.
+`
+    : ""
+}
 IMPORTANT title rules:
 - Prefer the activity/event name (usually the H1 inside the booking widget or main content) over the site's <title> tag, which is often just the studio/venue brand.
 - Do not append the venue name to the title.
@@ -339,7 +355,7 @@ ${markdown.slice(0, 8000)}`;
     // Cache it (best-effort)
     await supabaseAdmin
       .from("scrape_cache")
-      .upsert({ url, payload: JSON.parse(JSON.stringify(payload)) });
+      .upsert({ url: cacheKey, payload: JSON.parse(JSON.stringify(payload)) });
 
     return payload;
   });
