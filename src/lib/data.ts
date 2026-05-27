@@ -40,6 +40,7 @@ export interface Activity {
   tags: string[];
   dates: ActivityDate[];
   kind: "one_time" | "recurring" | "timeless";
+  durationMinutes?: number;
 }
 
 export const CATEGORY_META: Record<
