@@ -17,6 +17,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivitiesIdRouteImport } from './routes/activities.$id'
+import { Route as ApiPublicCronRefreshOrganizersRouteImport } from './routes/api/public/cron.refresh-organizers'
 
 const SuggestionsRoute = SuggestionsRouteImport.update({
   id: '/suggestions',
@@ -58,6 +59,12 @@ const ActivitiesIdRoute = ActivitiesIdRouteImport.update({
   path: '/activities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiPublicCronRefreshOrganizersRoute =
+  ApiPublicCronRefreshOrganizersRouteImport.update({
+    id: '/api/public/cron/refresh-organizers',
+    path: '/api/public/cron/refresh-organizers',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -68,6 +75,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRoutesByTo {
   '/': typeof IndexRoute
@@ -78,6 +86,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRoutesById {
   __root__: typeof rootRouteImport
@@ -89,6 +98,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRouteTypes {
   fileRoutesByFullPath: FileRoutesByFullPath
@@ -101,6 +111,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-organizers'
   fileRoutesByTo: FileRoutesByTo
   to:
     | '/'
@@ -111,6 +122,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-organizers'
   id:
     | '__root__'
     | '/'
@@ -121,6 +133,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-organizers'
   fileRoutesById: FileRoutesById
 }
 export interface RootRouteChildren {
@@ -132,6 +145,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   ActivitiesIdRoute: typeof ActivitiesIdRoute
+  ApiPublicCronRefreshOrganizersRoute: typeof ApiPublicCronRefreshOrganizersRoute
 }
 
 declare module '@tanstack/react-router' {
@@ -192,6 +206,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActivitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/refresh-organizers': {
+      id: '/api/public/cron/refresh-organizers'
+      path: '/api/public/cron/refresh-organizers'
+      fullPath: '/api/public/cron/refresh-organizers'
+      preLoaderRoute: typeof ApiPublicCronRefreshOrganizersRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -204,6 +225,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   ActivitiesIdRoute: ActivitiesIdRoute,
+  ApiPublicCronRefreshOrganizersRoute: ApiPublicCronRefreshOrganizersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
