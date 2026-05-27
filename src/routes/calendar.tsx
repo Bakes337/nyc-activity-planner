@@ -192,7 +192,7 @@ function CalendarPage() {
                 Open day — schedule something dreamy.
               </p>
             ) : (
-              <ul className="space-y-2">
+              <div className="space-y-2">
                 {b.items.map(({ activity, date }) => {
                   const meta = CATEGORY_META[activity.category];
                   return (
