@@ -81,7 +81,7 @@ export function PageHeader({
     <header className="relative px-5 pb-3 pt-7">
       <div
         aria-hidden
-        className="absolute inset-x-0 top-0 -z-10 h-44 paint-wash opacity-80"
+        className="absolute inset-x-0 top-0 -z-10 h-44 opacity-80"
         style={{
           maskImage:
             "linear-gradient(to bottom, black 30%, transparent 100%)",
