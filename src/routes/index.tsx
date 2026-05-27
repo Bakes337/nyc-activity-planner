@@ -35,8 +35,9 @@ const CATS: Category[] = [
   "music",
   "food",
   "comedy",
-  "art",
-  "outdoors",
+  "culture",
+  "crafts",
+  "active",
   "theater",
   "film",
 ];
