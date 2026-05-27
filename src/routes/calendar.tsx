@@ -1,4 +1,4 @@
-import { createFileRoute } from "@tanstack/react-router";
+import { createFileRoute, Link } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
@@ -196,9 +196,11 @@ function CalendarPage() {
                 {b.items.map(({ activity, date }) => {
                   const meta = CATEGORY_META[activity.category];
                   return (
-                    <li
+                    <Link
                       key={date.id}
-                      className="paint-card flex items-stretch overflow-hidden"
+                      to="/activities/$id"
+                      params={{ id: activity.id }}
+                      className="paint-card flex items-stretch overflow-hidden transition hover:-translate-y-0.5 hover:shadow-lg"
                     >
                       <div
                         className="w-1.5 shrink-0"
@@ -223,10 +225,10 @@ function CalendarPage() {
                           </p>
                         </div>
                       </div>
-                    </li>
+                    </Link>
                   );
                 })}
-              </ul>
+              </div>
             )}
           </section>
         ))}
