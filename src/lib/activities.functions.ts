@@ -321,7 +321,9 @@ ${markdown.slice(0, 8000)}`;
       borough: coerce(BOROUGHS, raw.borough, "Manhattan"),
       category: coerce(CATEGORIES, raw.category, "music"),
       priceTier: coerce(PRICE_TIERS, raw.priceTier, "$$"),
-      priceNote: typeof raw.priceNote === "string" && raw.priceNote.trim() ? raw.priceNote.trim() : null,
+      priceNote:
+        peekData?.dates?.find((d) => d.priceNote)?.priceNote ??
+        (typeof raw.priceNote === "string" && raw.priceNote.trim() ? raw.priceNote.trim() : null),
       kind: coerce(KINDS, raw.kind, dates.length > 1 ? "recurring" : dates.length === 1 ? "one_time" : "timeless"),
       tags: Array.isArray(raw.tags)
         ? (raw.tags as unknown[])
