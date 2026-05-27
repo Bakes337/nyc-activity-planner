@@ -38,6 +38,7 @@ interface Draft {
   notes: string;
   sourceUrl: string;
   dates: DraftDate[];
+  durationMinutes: string;
 }
 
 function fromParsed(p: ParsedActivity): Draft {
@@ -54,6 +55,7 @@ function fromParsed(p: ParsedActivity): Draft {
     notes: p.notes ?? "",
     sourceUrl: p.sourceUrl,
     dates: p.dates.map((d) => ({ startsAt: d.startsAt, endsAt: d.endsAt })),
+    durationMinutes: p.durationMinutes != null ? String(p.durationMinutes) : "",
   };
 }
 
@@ -71,6 +73,7 @@ function emptyDraft(): Draft {
     notes: "",
     sourceUrl: "",
     dates: [],
+    durationMinutes: "",
   };
 }
 
@@ -145,6 +148,10 @@ function AddPage() {
             .map((t) => t.trim().toLowerCase())
             .filter(Boolean),
           dates: draft.dates.filter((d) => d.startsAt),
+          durationMinutes: (() => {
+            const n = parseInt(draft.durationMinutes, 10);
+            return Number.isFinite(n) && n > 0 ? n : null;
+          })(),
         },
       });
       navigate({ to: "/" });
@@ -361,6 +368,18 @@ function DraftForm({
             />
           </Field>
         </div>
+
+        <Field label="Duration (minutes)">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={draft.durationMinutes}
+            onChange={(e) => set("durationMinutes", e.target.value)}
+            placeholder="e.g. 90, 210 for 3.5 hrs"
+            className={inputCls}
+          />
+        </Field>
 
         <Field label="Kind">
           <div className="flex gap-1.5">
