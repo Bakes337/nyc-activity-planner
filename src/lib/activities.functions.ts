@@ -49,7 +49,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
       .eq("url", url)
       .maybeSingle();
     if (cached.data?.payload) {
-      return cached.data.payload as ParsedActivity;
+      return cached.data.payload as unknown as ParsedActivity;
     }
 
     const firecrawlKey = process.env.FIRECRAWL_API_KEY;
@@ -173,7 +173,9 @@ ${markdown.slice(0, 8000)}`;
     };
 
     // Cache it (best-effort)
-    await supabaseAdmin.from("scrape_cache").upsert({ url, payload });
+    await supabaseAdmin
+      .from("scrape_cache")
+      .upsert({ url, payload: payload as unknown as Record<string, unknown> });
 
     return payload;
   });
