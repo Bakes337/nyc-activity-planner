@@ -256,7 +256,11 @@ async function refreshOne(orgRow: {
       added = rows.length;
     }
 
-    const updates: Record<string, unknown> = {
+    const updates: {
+      last_checked_at: string;
+      last_error: string | null;
+      name?: string;
+    } = {
       last_checked_at: new Date().toISOString(),
       last_error: null,
     };
