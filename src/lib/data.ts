@@ -2,8 +2,9 @@ export type Category =
   | "music"
   | "food"
   | "comedy"
-  | "art"
-  | "outdoors"
+  | "culture"
+  | "crafts"
+  | "active"
   | "theater"
   | "film";
 
@@ -50,8 +51,9 @@ export const CATEGORY_META: Record<
   music: { label: "Music", color: "var(--cobalt)", emoji: "♪" },
   food: { label: "Food", color: "var(--neon-pink)", emoji: "✦" },
   comedy: { label: "Comedy", color: "var(--mint)", emoji: "◆" },
-  art: { label: "Art", color: "var(--forest)", emoji: "▲" },
-  outdoors: { label: "Outdoors", color: "var(--teal)", emoji: "❋" },
+  culture: { label: "Culture", color: "var(--forest)", emoji: "▲" },
+  crafts: { label: "Crafts", color: "var(--tiffany)", emoji: "✿" },
+  active: { label: "Active", color: "var(--teal)", emoji: "❋" },
   theater: { label: "Theater", color: "#6B1422", emoji: "★" },
   film: { label: "Film", color: "var(--neon-coral)", emoji: "●" },
 };
@@ -124,7 +126,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "MoMA PS1",
     neighborhood: "Long Island City",
     borough: "Queens",
-    category: "art",
+    category: "culture",
     priceTier: "$$",
     priceNote: "$10 suggested",
     status: "planned",
@@ -139,7 +141,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "Prospect Park",
     neighborhood: "Park Slope",
     borough: "Brooklyn",
-    category: "outdoors",
+    category: "active",
     priceTier: "free",
     status: "idea",
     imageSeed: "prospect",
@@ -219,7 +221,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "Storm King Art Center",
     neighborhood: "New Windsor",
     borough: "Manhattan",
-    category: "art",
+    category: "culture",
     priceTier: "$$",
     status: "idea",
     imageSeed: "stormking",
@@ -233,7 +235,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "Brighton Beach",
     neighborhood: "Brighton Beach",
     borough: "Brooklyn",
-    category: "outdoors",
+    category: "active",
     priceTier: "free",
     status: "idea",
     imageSeed: "brighton",
@@ -295,7 +297,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "Wave Hill",
     neighborhood: "Riverdale",
     borough: "Bronx",
-    category: "outdoors",
+    category: "active",
     priceTier: "$",
     priceNote: "$10",
     status: "idea",
@@ -310,7 +312,7 @@ export const ACTIVITIES: Activity[] = [
     venue: "Snug Harbor Cultural Center",
     neighborhood: "Livingston",
     borough: "Staten Island",
-    category: "art",
+    category: "culture",
     priceTier: "free",
     status: "idea",
     imageSeed: "snug",

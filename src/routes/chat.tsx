@@ -46,7 +46,7 @@ function mockAnswer(q: string): Msg {
   if (lower.includes("brooklyn"))
     picks = picks.filter((a) => a.borough === "Brooklyn");
   if (lower.includes("outdoor"))
-    picks = picks.filter((a) => a.category === "outdoors");
+    picks = picks.filter((a) => a.category === "active");
   if (lower.includes("date"))
     picks = picks.filter((a) =>
       ["film", "food", "music", "theater"].includes(a.category),

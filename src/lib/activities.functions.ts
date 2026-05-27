@@ -321,7 +321,7 @@ async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<Pe
   return { title, dates };
 }
 
-const CATEGORIES = ["music", "food", "comedy", "art", "outdoors", "theater", "film"] as const;
+const CATEGORIES = ["music", "food", "comedy", "culture", "crafts", "active", "theater", "film"] as const;
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 const PRICE_TIERS = ["free", "$", "$$", "$$$"] as const;
 const KINDS = ["one_time", "recurring", "timeless"] as const;
