@@ -9,6 +9,7 @@
 // Additionally, you should also exclude this file from your linter and/or formatter to prevent it from being checked or modified.
 
 import { Route as rootRouteImport } from './routes/__root'
+import { Route as SuggestionsRouteImport } from './routes/suggestions'
 import { Route as SettingsRouteImport } from './routes/settings'
 import { Route as PlaylistsRouteImport } from './routes/playlists'
 import { Route as ChatRouteImport } from './routes/chat'
@@ -17,6 +18,11 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivitiesIdRouteImport } from './routes/activities.$id'
 
+const SuggestionsRoute = SuggestionsRouteImport.update({
+  id: '/suggestions',
+  path: '/suggestions',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const SettingsRoute = SettingsRouteImport.update({
   id: '/settings',
   path: '/settings',
@@ -60,6 +66,7 @@ export interface FileRoutesByFullPath {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRoutesByTo {
@@ -69,6 +76,7 @@ export interface FileRoutesByTo {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRoutesById {
@@ -79,6 +87,7 @@ export interface FileRoutesById {
   '/chat': typeof ChatRoute
   '/playlists': typeof PlaylistsRoute
   '/settings': typeof SettingsRoute
+  '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
 }
 export interface FileRouteTypes {
@@ -90,6 +99,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/playlists'
     | '/settings'
+    | '/suggestions'
     | '/activities/$id'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -99,6 +109,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/playlists'
     | '/settings'
+    | '/suggestions'
     | '/activities/$id'
   id:
     | '__root__'
@@ -108,6 +119,7 @@ export interface FileRouteTypes {
     | '/chat'
     | '/playlists'
     | '/settings'
+    | '/suggestions'
     | '/activities/$id'
   fileRoutesById: FileRoutesById
 }
@@ -118,11 +130,19 @@ export interface RootRouteChildren {
   ChatRoute: typeof ChatRoute
   PlaylistsRoute: typeof PlaylistsRoute
   SettingsRoute: typeof SettingsRoute
+  SuggestionsRoute: typeof SuggestionsRoute
   ActivitiesIdRoute: typeof ActivitiesIdRoute
 }
 
 declare module '@tanstack/react-router' {
   interface FileRoutesByPath {
+    '/suggestions': {
+      id: '/suggestions'
+      path: '/suggestions'
+      fullPath: '/suggestions'
+      preLoaderRoute: typeof SuggestionsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/settings': {
       id: '/settings'
       path: '/settings'
@@ -182,6 +202,7 @@ const rootRouteChildren: RootRouteChildren = {
   ChatRoute: ChatRoute,
   PlaylistsRoute: PlaylistsRoute,
   SettingsRoute: SettingsRoute,
+  SuggestionsRoute: SuggestionsRoute,
   ActivitiesIdRoute: ActivitiesIdRoute,
 }
 export const routeTree = rootRouteImport
