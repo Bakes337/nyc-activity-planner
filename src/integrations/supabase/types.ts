@@ -20,6 +20,7 @@ export type Database = {
           category: string
           created_at: string
           dates: Json
+          duration_minutes: number | null
           id: string
           image_seed: string
           kind: string
@@ -39,6 +40,7 @@ export type Database = {
           category?: string
           created_at?: string
           dates?: Json
+          duration_minutes?: number | null
           id?: string
           image_seed?: string
           kind?: string
@@ -58,6 +60,7 @@ export type Database = {
           category?: string
           created_at?: string
           dates?: Json
+          duration_minutes?: number | null
           id?: string
           image_seed?: string
           kind?: string
