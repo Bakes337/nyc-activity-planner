@@ -103,73 +103,64 @@ function Index() {
         subtitle={`${ACTIVITIES.length} bookmarked ideas — filter, dream, plan.`}
       />
 
-      <div className="sticky top-0 z-10 -mt-1 bg-[color:var(--background)]/85 px-5 pb-3 pt-2 backdrop-blur-md">
-        <label className="paint-card flex items-center gap-2 px-4 py-2.5">
-          <span aria-hidden className="text-[color:var(--cobalt)]">🔎</span>
-          <input
-            value={query}
-            onChange={(e) => setQuery(e.target.value)}
-            placeholder="Search venues, neighborhoods, ideas…"
-            className="w-full bg-transparent text-sm outline-none placeholder:text-[color:var(--muted-foreground)]"
-          />
-        </label>
-
-        <div className="no-scrollbar -mx-5 mt-3 flex gap-2 overflow-x-auto px-5">
-          <WhenChip when={when} setWhen={setWhen} />
-          {CATS.map((c) => {
-            const m = CATEGORY_META[c];
-            const active = cats.has(c);
-            return (
-              <button
-                key={c}
-                onClick={() => toggle(cats, c, setCats)}
-                className={
-                  "flex shrink-0 items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition " +
-                  (active
-                    ? "border-transparent text-white"
-                    : "border-[color:var(--border)] bg-white/70 text-[color:var(--ink)] hover:bg-white")
-                }
-                style={active ? { background: m.color } : undefined}
-              >
-                <span
-                  className="cat-dot"
-                  style={{ background: active ? "white" : m.color }}
-                />
-                {m.label}
-              </button>
-            );
-          })}
-          <span className="mx-1 self-center text-[color:var(--border)]">·</span>
-          {PRICES.map((p) => {
-            const active = prices.has(p);
-            return (
-              <button
-                key={p}
-                onClick={() => toggle(prices, p, setPrices)}
-                className={
-                  "shrink-0 rounded-full border px-3 py-1.5 text-xs font-bold transition " +
-                  (active
-                    ? "border-transparent bg-[color:var(--ink)] text-[color:var(--cream)]"
-                    : "border-[color:var(--border)] bg-white/70 text-[color:var(--ink)] hover:bg-white")
-                }
-              >
-                {p === "free" ? "Free" : p}
-              </button>
-            );
-          })}
-        </div>
-
-        <div className="mt-2 flex items-center justify-between text-[11px] text-[color:var(--muted-foreground)]">
-          <span>{filtered.length} matches</span>
-          <label className="flex cursor-pointer items-center gap-1.5">
+      <div className="sticky top-0 z-10 px-3 pb-3 pt-1">
+        <div
+          className="rounded-[28px] border border-[color:var(--border)] bg-[color:var(--cream)]/85 p-3 shadow-[0_10px_30px_-18px_rgba(11,44,122,0.35)] backdrop-blur-md"
+        >
+          <label className="flex items-center gap-2 rounded-full bg-white px-4 py-2.5 ring-1 ring-[color:var(--border)]">
+            <span aria-hidden className="text-[color:var(--cobalt)]">🔎</span>
             <input
-              type="checkbox"
-              checked={hideSoldOut}
-              onChange={(e) => setHideSoldOut(e.target.checked)}
-              className="h-3.5 w-3.5 accent-[color:var(--cobalt)]"
+              value={query}
+              onChange={(e) => setQuery(e.target.value)}
+              placeholder="Search venues, neighborhoods, ideas…"
+              className="w-full bg-transparent text-sm outline-none placeholder:text-[color:var(--muted-foreground)]"
             />
-            Hide sold-out
           </label>
+
+          <div className="mt-3 flex flex-wrap items-center gap-2">
+            <WhenChip when={when} setWhen={setWhen} />
+
+            <PriceSelect prices={prices} setPrices={setPrices} />
+
+            <span className="mx-0.5 h-5 w-px rounded-full bg-[color:var(--border)]" aria-hidden />
+
+            {CATS.map((c) => {
+              const m = CATEGORY_META[c];
+              const active = cats.has(c);
+              return (
+                <button
+                  key={c}
+                  onClick={() => toggle(cats, c, setCats)}
+                  className={
+                    "flex items-center gap-1.5 rounded-full border px-3 py-1.5 text-xs font-semibold transition " +
+                    (active
+                      ? "border-transparent text-white shadow-sm"
+                      : "border-[color:var(--border)] bg-white/80 text-[color:var(--ink)] hover:bg-white")
+                  }
+                  style={active ? { background: m.color } : undefined}
+                >
+                  <span
+                    className="cat-dot"
+                    style={{ background: active ? "white" : m.color }}
+                  />
+                  {m.label}
+                </button>
+              );
+            })}
+          </div>
+
+          <div className="mt-3 flex items-center justify-between text-[11px] text-[color:var(--muted-foreground)]">
+            <span>{filtered.length} matches</span>
+            <label className="flex cursor-pointer items-center gap-1.5">
+              <input
+                type="checkbox"
+                checked={hideSoldOut}
+                onChange={(e) => setHideSoldOut(e.target.checked)}
+                className="h-3.5 w-3.5 accent-[color:var(--cobalt)]"
+              />
+              Hide sold-out
+            </label>
+          </div>
         </div>
       </div>
 
@@ -200,15 +191,81 @@ function WhenChip({
     weekend: "Weekend",
     thisMonth: "This month",
   };
-  const order: When[] = ["any", "thisWeek", "weekend", "thisMonth"];
-  const idx = order.indexOf(when);
-  const next = order[(idx + 1) % order.length];
   return (
-    <button
-      onClick={() => setWhen(next)}
-      className="shrink-0 rounded-full border border-transparent bg-[color:var(--cobalt)] px-3 py-1.5 text-xs font-bold text-[color:var(--cream)]"
-    >
-      {labels[when]} ⌄
-    </button>
+    <div className="relative">
+      <select
+        value={when}
+        onChange={(e) => setWhen(e.target.value as When)}
+        className="appearance-none rounded-full border border-transparent bg-[color:var(--cobalt)] py-1.5 pl-3 pr-7 text-xs font-bold text-[color:var(--cream)] outline-none"
+      >
+        {(Object.keys(labels) as When[]).map((k) => (
+          <option key={k} value={k}>
+            {labels[k]}
+          </option>
+        ))}
+      </select>
+      <span className="pointer-events-none absolute right-2.5 top-1/2 -translate-y-1/2 text-[10px] text-[color:var(--cream)]">▾</span>
+    </div>
+  );
+}
+
+function PriceSelect({
+  prices,
+  setPrices,
+}: {
+  prices: Set<PriceTier>;
+  setPrices: (s: Set<PriceTier>) => void;
+}) {
+  const allPrices: PriceTier[] = ["free", "$", "$$", "$$$"];
+  const label =
+    prices.size === 0
+      ? "Any price"
+      : allPrices
+          .filter((p) => prices.has(p))
+          .map((p) => (p === "free" ? "Free" : p))
+          .join(", ");
+  const value = prices.size === 0 ? "any" : "custom";
+  return (
+    <details className="relative">
+      <summary className="flex cursor-pointer list-none items-center gap-1.5 rounded-full border border-[color:var(--border)] bg-white/80 px-3 py-1.5 text-xs font-bold text-[color:var(--ink)] hover:bg-white">
+        <span>{label}</span>
+        <span className="text-[10px] opacity-60">▾</span>
+        <input type="hidden" value={value} readOnly />
+      </summary>
+      <div className="absolute left-0 top-[calc(100%+6px)] z-20 min-w-[160px] rounded-2xl border border-[color:var(--border)] bg-white p-2 shadow-lg">
+        <button
+          type="button"
+          onClick={() => setPrices(new Set())}
+          className="flex w-full items-center justify-between rounded-lg px-2 py-1.5 text-left text-xs font-semibold text-[color:var(--ink)] hover:bg-[color:var(--cream)]"
+        >
+          Any price
+          {prices.size === 0 && <span className="text-[color:var(--neon-pink)]">✓</span>}
+        </button>
+        {allPrices.map((p) => {
+          const checked = prices.has(p);
+          return (
+            <label
+              key={p}
+              className="flex cursor-pointer items-center justify-between rounded-lg px-2 py-1.5 text-xs font-semibold text-[color:var(--ink)] hover:bg-[color:var(--cream)]"
+            >
+              <span className="flex items-center gap-2">
+                <input
+                  type="checkbox"
+                  checked={checked}
+                  onChange={() => {
+                    const next = new Set(prices);
+                    if (next.has(p)) next.delete(p);
+                    else next.add(p);
+                    setPrices(next);
+                  }}
+                  className="h-3.5 w-3.5 accent-[color:var(--cobalt)]"
+                />
+                {p === "free" ? "Free" : p}
+              </span>
+            </label>
+          );
+        })}
+      </div>
+    </details>
   );
 }
