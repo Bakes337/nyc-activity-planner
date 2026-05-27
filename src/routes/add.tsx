@@ -369,6 +369,18 @@ function DraftForm({
           </Field>
         </div>
 
+        <Field label="Duration (minutes)">
+          <input
+            type="number"
+            inputMode="numeric"
+            min={1}
+            value={draft.durationMinutes}
+            onChange={(e) => set("durationMinutes", e.target.value)}
+            placeholder="e.g. 90, 210 for 3.5 hrs"
+            className={inputCls}
+          />
+        </Field>
+
         <Field label="Kind">
           <div className="flex gap-1.5">
             {KINDS.map((k) => {
