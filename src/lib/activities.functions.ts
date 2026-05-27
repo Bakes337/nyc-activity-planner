@@ -175,7 +175,7 @@ ${markdown.slice(0, 8000)}`;
     // Cache it (best-effort)
     await supabaseAdmin
       .from("scrape_cache")
-      .upsert({ url, payload: payload as unknown as Record<string, unknown> });
+      .upsert({ url, payload: JSON.parse(JSON.stringify(payload)) });
 
     return payload;
   });
