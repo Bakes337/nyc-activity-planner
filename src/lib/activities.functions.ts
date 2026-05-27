@@ -396,8 +396,15 @@ Schema:
   "tags": string[],             // 0-6 short lowercase keywords
   "notes": string | null,       // one short sentence summary
   "dates": [ { "startsAt": ISO-8601 string in America/New_York, "endsAt": ISO-8601 or null } ],
-  "durationMinutes": number | null  // typical session length in minutes (e.g. "3-4 hours" -> 210, "90 min" -> 90)
+  "durationMinutes": number | null
 }
+
+IMPORTANT: For "durationMinutes" — convert the typical session length to MINUTES:
+  - "3-4 hours" -> 210 (midpoint)
+  - "2 hours" -> 120
+  - "90 minutes" -> 90
+  - "all day" -> 480
+Look for phrases like "Duration:", "X hrs", "X-Y hours", "lasts about". If unclear, use null.
 
 Use null/empty when truly unknown. If multiple show times exist, include up to 6 in dates.
 
