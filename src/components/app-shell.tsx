@@ -81,12 +81,12 @@ export function PageHeader({
     <header className="relative px-5 pb-3 pt-7">
       <div
         aria-hidden
-        className="pointer-events-none absolute inset-x-0 -top-10 -z-10 h-80 paint-wash opacity-70"
+        className="pointer-events-none absolute inset-x-0 -top-10 -z-10 h-44 paint-wash opacity-80"
         style={{
           maskImage:
-            "linear-gradient(to bottom, black 0%, black 25%, transparent 95%)",
+            "linear-gradient(to bottom, black 0%, black 35%, transparent 100%)",
           WebkitMaskImage:
-            "linear-gradient(to bottom, black 0%, black 25%, transparent 95%)",
+            "linear-gradient(to bottom, black 0%, black 35%, transparent 100%)",
         }}
       />
       <div className="flex items-start justify-between gap-3">
