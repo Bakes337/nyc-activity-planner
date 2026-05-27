@@ -352,7 +352,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
     const url = data.url.trim();
     const hint = (data.hint ?? "").trim();
     // bump this when extraction logic changes to invalidate old cached parses
-    const PARSER_VERSION = "v3-fh-actions";
+    const PARSER_VERSION = "v4-fh-3months";
     const cacheKey = hint
       ? `${url}\n#hint:${hint}\n#v:${PARSER_VERSION}`
       : `${url}\n#v:${PARSER_VERSION}`;
