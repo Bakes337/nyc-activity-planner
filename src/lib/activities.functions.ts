@@ -24,6 +24,12 @@ interface FirecrawlOpts {
   formats: FirecrawlFormat[];
   onlyMainContent?: boolean;
   waitFor?: number;
+  actions?: Array<
+    | { type: "wait"; milliseconds: number }
+    | { type: "scroll"; direction?: "up" | "down" }
+    | { type: "click"; selector: string }
+    | { type: "screenshot" }
+  >;
 }
 
 async function firecrawlScrape(
@@ -80,14 +86,45 @@ function detectPeekUrl(sourceUrl: string, links: string[], html: string, markdow
 }
 
 const FAREHARBOR_RE = /https?:\/\/fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+\/?[^\s"'<>)]*/gi;
+const FH_ITEM_RE = /fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+/i;
 
-function detectFareHarborUrl(sourceUrl: string, links: string[], html: string, markdown: string): string | null {
-  if (/fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+/i.test(sourceUrl)) return sourceUrl;
-  const fromLinks = links.find((l) => /fareharbor\.com\/(?:embeds\/book|book)\/[a-z0-9-]+\/items\/\d+/i.test(l));
-  if (fromLinks) return fromLinks;
+// Pick the FareHarbor URL most likely to be the main class booking widget
+// (not the gift-card widget or "related class" CTA).
+function detectFareHarborUrl(
+  sourceUrl: string,
+  links: string[],
+  html: string,
+  markdown: string,
+  hint?: string,
+): string | null {
+  if (FH_ITEM_RE.test(sourceUrl)) return sourceUrl;
+
   const hay = `${html}\n${markdown}`;
-  const m = hay.match(FAREHARBOR_RE);
-  return m?.[0] ?? null;
+  const candidates = Array.from(
+    new Set([
+      ...links.filter((l) => FH_ITEM_RE.test(l)),
+      ...(hay.match(FAREHARBOR_RE) ?? []),
+    ]),
+  );
+  if (candidates.length === 0) return null;
+  if (candidates.length === 1) return candidates[0];
+
+  const scoreFor = (url: string) => {
+    let score = 0;
+    let idx = 0;
+    while ((idx = markdown.indexOf(url, idx)) !== -1) {
+      const ctx = markdown.slice(Math.max(0, idx - 200), idx + 200).toLowerCase();
+      if (/gift\s*card|buy\s*gift|gift\s*this/.test(ctx)) score -= 5;
+      if (/book\s*(?:this|now|class)|check\s*availability/.test(ctx)) score += 5;
+      if (hint && ctx.includes(hint.toLowerCase())) score += 8;
+      idx += url.length;
+    }
+    return score;
+  };
+
+  return candidates
+    .map((u) => ({ u, s: scoreFor(u) }))
+    .sort((a, b) => b.s - a.s)[0].u;
 }
 
 async function scrapePeekWidget(apiKey: string, peekUrl: string): Promise<PeekExtraction> {
@@ -189,11 +226,16 @@ async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<Pe
       {
         type: "json",
         schema: fhSchema,
-        prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session shown in the FareHarbor calendar widget — include all visible future months. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles.`,
+        prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session shown in the FareHarbor calendar widget — include all visible future months. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles. If you cannot see specific time tiles, return availableDates: [].`,
       },
     ],
-    waitFor: 6000,
+    waitFor: 8000,
     onlyMainContent: false,
+    actions: [
+      { type: "wait", milliseconds: 4000 },
+      { type: "scroll", direction: "down" },
+      { type: "wait", milliseconds: 2000 },
+    ],
   });
 
   const j = (res.json ?? {}) as { title?: unknown; availableDates?: unknown };
@@ -268,7 +310,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
     const url = data.url.trim();
     const hint = (data.hint ?? "").trim();
     // bump this when extraction logic changes to invalidate old cached parses
-    const PARSER_VERSION = "v2-fh-duration";
+    const PARSER_VERSION = "v3-fh-actions";
     const cacheKey = hint
       ? `${url}\n#hint:${hint}\n#v:${PARSER_VERSION}`
       : `${url}\n#v:${PARSER_VERSION}`;
@@ -302,7 +344,7 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
 
     // 2) If a Peek booking widget is embedded, use the adapter for title + dates
     const peekUrl = detectPeekUrl(url, allLinks, html, markdown);
-    const fhUrl = peekUrl ? null : detectFareHarborUrl(url, allLinks, html, markdown);
+    const fhUrl = peekUrl ? null : detectFareHarborUrl(url, allLinks, html, markdown, hint);
     let peekData: PeekExtraction | null = null;
     if (peekUrl) {
       try {
