@@ -267,7 +267,11 @@ export const parseActivityUrl = createServerFn({ method: "POST" })
   .handler(async ({ data }): Promise<ParsedActivity> => {
     const url = data.url.trim();
     const hint = (data.hint ?? "").trim();
-    const cacheKey = hint ? `${url}\n#hint:${hint}` : url;
+    // bump this when extraction logic changes to invalidate old cached parses
+    const PARSER_VERSION = "v2-fh-duration";
+    const cacheKey = hint
+      ? `${url}\n#hint:${hint}\n#v:${PARSER_VERSION}`
+      : `${url}\n#v:${PARSER_VERSION}`;
 
     // Cache lookup
     const cached = await supabaseAdmin
