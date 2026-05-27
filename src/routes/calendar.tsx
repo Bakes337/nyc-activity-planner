@@ -1,13 +1,16 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import {
-  ACTIVITIES,
   CATEGORY_META,
   formatTime,
   type Activity,
   type ActivityDate,
 } from "../lib/data";
+import { listActivities } from "../lib/activities.functions";
+import { rowToActivity, type ActivityRow } from "../lib/activities";
 
 export const Route = createFileRoute("/calendar")({
   head: () => ({
@@ -29,6 +32,16 @@ interface DayBucket {
 }
 
 function CalendarPage() {
+  const fetchList = useServerFn(listActivities);
+  const { data: rows = [] } = useQuery({
+    queryKey: ["activities"],
+    queryFn: () => fetchList(),
+  });
+  const activities = useMemo(
+    () => (rows as ActivityRow[]).map(rowToActivity),
+    [rows],
+  );
+
   const [anchor, setAnchor] = useState(() => startOfWeek(new Date()));
 
   const buckets: DayBucket[] = useMemo(() => {
@@ -40,7 +53,7 @@ function CalendarPage() {
       day.setHours(0, 0, 0, 0);
       days.push({ date: day, items: [] });
     }
-    for (const a of ACTIVITIES) {
+    for (const a of activities) {
       for (const d of a.dates) {
         if (d.isSoldOut) continue;
         const ds = new Date(d.startsAt);
@@ -61,7 +74,7 @@ function CalendarPage() {
           new Date(y.date.startsAt).getTime(),
       );
     return days;
-  }, [anchor]);
+  }, [anchor, activities]);
 
   const [selectedIdx, setSelectedIdx] = useState(0);
 

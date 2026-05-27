@@ -14,7 +14,84 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      activities: {
+        Row: {
+          borough: string
+          category: string
+          created_at: string
+          dates: Json
+          id: string
+          image_seed: string
+          kind: string
+          neighborhood: string
+          notes: string | null
+          price_note: string | null
+          price_tier: string
+          source_url: string | null
+          status: string
+          tags: string[]
+          title: string
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          borough?: string
+          category?: string
+          created_at?: string
+          dates?: Json
+          id?: string
+          image_seed?: string
+          kind?: string
+          neighborhood?: string
+          notes?: string | null
+          price_note?: string | null
+          price_tier?: string
+          source_url?: string | null
+          status?: string
+          tags?: string[]
+          title: string
+          updated_at?: string
+          venue?: string
+        }
+        Update: {
+          borough?: string
+          category?: string
+          created_at?: string
+          dates?: Json
+          id?: string
+          image_seed?: string
+          kind?: string
+          neighborhood?: string
+          notes?: string | null
+          price_note?: string | null
+          price_tier?: string
+          source_url?: string | null
+          status?: string
+          tags?: string[]
+          title?: string
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: []
+      }
+      scrape_cache: {
+        Row: {
+          created_at: string
+          payload: Json
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          payload: Json
+          url: string
+        }
+        Update: {
+          created_at?: string
+          payload?: Json
+          url?: string
+        }
+        Relationships: []
+      }
     }
     Views: {
       [_ in never]: never

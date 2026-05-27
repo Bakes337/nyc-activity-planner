@@ -1,14 +1,17 @@
 import { createFileRoute } from "@tanstack/react-router";
+import { useServerFn } from "@tanstack/react-start";
+import { useQuery } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import { ActivityCard } from "../components/activity-card";
 import {
-  ACTIVITIES,
   CATEGORY_META,
   type Category,
   type PriceTier,
   nextDate,
 } from "../lib/data";
+import { listActivities } from "../lib/activities.functions";
+import { rowToActivity, type ActivityRow } from "../lib/activities";
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -56,6 +59,16 @@ function isThisMonth(d: Date) {
 }
 
 function Index() {
+  const fetchList = useServerFn(listActivities);
+  const { data: rows = [], isLoading } = useQuery({
+    queryKey: ["activities"],
+    queryFn: () => fetchList(),
+  });
+  const activities = useMemo(
+    () => (rows as ActivityRow[]).map(rowToActivity),
+    [rows],
+  );
+
   const [query, setQuery] = useState("");
   const [cats, setCats] = useState<Set<Category>>(new Set());
   const [prices, setPrices] = useState<Set<PriceTier>>(new Set());
@@ -63,7 +76,7 @@ function Index() {
   const [hideSoldOut, setHideSoldOut] = useState(true);
 
   const filtered = useMemo(() => {
-    return ACTIVITIES.filter((a) => {
+    return activities.filter((a) => {
       if (cats.size > 0 && !cats.has(a.category)) return false;
       if (prices.size > 0 && !prices.has(a.priceTier)) return false;
       if (query) {
@@ -86,7 +99,7 @@ function Index() {
       }
       return true;
     });
-  }, [query, cats, prices, when, hideSoldOut]);
+  }, [activities, query, cats, prices, when, hideSoldOut]);
 
   function toggle<T>(set: Set<T>, v: T, setter: (s: Set<T>) => void) {
     const next = new Set(set);
@@ -100,7 +113,7 @@ function Index() {
       <PageHeader
         eyebrow="Your library"
         title="NYC, on your terms"
-        subtitle={`${ACTIVITIES.length} bookmarked ideas — filter, dream, plan.`}
+        subtitle={`${activities.length} bookmarked idea${activities.length === 1 ? "" : "s"} — filter, dream, plan.`}
       />
 
       <div className="sticky top-0 z-10 px-3 pb-3 pt-1">
@@ -168,9 +181,16 @@ function Index() {
         {filtered.map((a) => (
           <ActivityCard key={a.id} a={a} />
         ))}
-        {filtered.length === 0 && (
+        {filtered.length === 0 && !isLoading && (
           <p className="col-span-full mt-6 text-center text-sm text-[color:var(--muted-foreground)]">
-            No matches. Loosen a filter or clear the search.
+            {activities.length === 0
+              ? "Your library is empty — tap + to paste your first link."
+              : "No matches. Loosen a filter or clear the search."}
+          </p>
+        )}
+        {isLoading && (
+          <p className="col-span-full mt-6 text-center text-sm text-[color:var(--muted-foreground)]">
+            Loading your library…
           </p>
         )}
       </main>
