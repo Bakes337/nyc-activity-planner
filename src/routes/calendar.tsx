@@ -74,13 +74,25 @@ function CalendarPage() {
         right={
           <div className="flex gap-2 pt-2">
             <button
-              onClick={() => shift(setAnchor, -7)}
+              onClick={() =>
+                setAnchor((prev) => {
+                  const x = new Date(prev);
+                  x.setDate(x.getDate() - 7);
+                  return x;
+                })
+              }
               className="rounded-full border border-[color:var(--border)] bg-white/80 px-3 py-1 text-xs font-semibold"
             >
               ←
             </button>
             <button
-              onClick={() => shift(setAnchor, 7)}
+              onClick={() =>
+                setAnchor((prev) => {
+                  const x = new Date(prev);
+                  x.setDate(x.getDate() + 7);
+                  return x;
+                })
+              }
               className="rounded-full border border-[color:var(--border)] bg-white/80 px-3 py-1 text-xs font-semibold"
             >
               →
@@ -216,13 +228,6 @@ function startOfWeek(d: Date) {
   const day = x.getDay();
   x.setDate(x.getDate() - day);
   return x;
-}
-function shift(set: (d: Date) => void, days: number) {
-  set(((prev) => {
-    void prev;
-    return prev;
-  }) as any);
-  // Use functional updater workaround: simpler to inline below
 }
 function isSameDay(a: Date, b: Date) {
   return (
