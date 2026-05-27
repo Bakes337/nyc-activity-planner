@@ -186,6 +186,17 @@ export const followOrganizer = createServerFn({ method: "POST" })
       .select()
       .single();
     if (error) throw new Error(error.message);
+    // Kick off an initial scrape so the user sees suggestions right away.
+    try {
+      await refreshOne({
+        id: inserted.id,
+        url: inserted.url,
+        filters: inserted.filters,
+        name: inserted.name ?? "",
+      });
+    } catch {
+      // Errors are already recorded on the row via last_error; don't fail the follow.
+    }
     return inserted;
   });
 
