@@ -78,7 +78,7 @@ function Index() {
       const next = nextDate(a);
       if (hideSoldOut && next?.isSoldOut) return false;
       if (when !== "any") {
-        if (!next) return a.kind === "timeless" ? when === "any" : false;
+        if (!next) return false;
         const ds = new Date(next.startsAt);
         if (when === "thisWeek" && !isThisWeek(ds)) return false;
         if (when === "weekend" && !isWeekend(ds)) return false;
