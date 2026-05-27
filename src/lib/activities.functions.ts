@@ -238,14 +238,14 @@ async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<Pe
 
   const scrapeMonth = async (monthsAhead: number) => {
     const actions: FirecrawlOpts["actions"] = [
-      { type: "wait", milliseconds: 4000 },
+      { type: "wait", milliseconds: 2500 },
       { type: "scroll", direction: "down" },
-      { type: "wait", milliseconds: 1500 },
+      { type: "wait", milliseconds: 1000 },
     ];
     for (let i = 0; i < monthsAhead; i++) {
       // Try several common selectors — Firecrawl click actions silently skip
       // selectors that don't match, so listing alternatives is safe.
-      actions.push(...clickNext, { type: "wait", milliseconds: 1500 });
+      actions.push(...clickNext, { type: "wait", milliseconds: 1200 });
     }
     return firecrawlScrape(apiKey, fhUrl, {
       formats: [
@@ -256,17 +256,32 @@ async function scrapeFareHarborWidget(apiKey: string, fhUrl: string): Promise<Pe
           prompt: `Today is ${today}. Extract the activity title and EVERY upcoming bookable session currently visible on the FareHarbor calendar. Each tile shows a date with one or more start times like "8:00 AM" or "6:00 PM"; emit one entry per start time. Ignore any date before today. Mark soldOut=true for greyed-out / unavailable tiles. If no time tiles are visible, return availableDates: [].`,
         },
       ],
-      waitFor: 8000,
+      waitFor: 5000,
       onlyMainContent: false,
       actions,
     });
   };
 
-  // Scrape current month + next 2 months in parallel
+  // Per-month timeout so a slow/failing month doesn't take down the whole
+  // request. We always return whatever months DID succeed.
+  const withTimeout = <T>(p: Promise<T>, ms: number, label: string): Promise<T> =>
+    new Promise((resolve, reject) => {
+      const t = setTimeout(() => reject(new Error(`${label} timed out after ${ms}ms`)), ms);
+      p.then((v) => {
+        clearTimeout(t);
+        resolve(v);
+      }).catch((e) => {
+        clearTimeout(t);
+        reject(e);
+      });
+    });
+
+  // Scrape current month + next 2 months in parallel, each capped individually.
+  // The first month gets a longer budget since it's the most important.
   const results = await Promise.allSettled([
-    scrapeMonth(0),
-    scrapeMonth(1),
-    scrapeMonth(2),
+    withTimeout(scrapeMonth(0), 35000, "FareHarbor month 0"),
+    withTimeout(scrapeMonth(1), 30000, "FareHarbor month 1"),
+    withTimeout(scrapeMonth(2), 30000, "FareHarbor month 2"),
   ]);
 
   const now = Date.now();
