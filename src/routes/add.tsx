@@ -21,7 +21,7 @@ const KINDS = [
   { v: "recurring", label: "Recurring" },
   { v: "timeless", label: "No fixed date" },
 ] as const;
-const CATS: Category[] = ["music", "food", "comedy", "art", "outdoors", "theater", "film"];
+const CATS: Category[] = ["music", "food", "comedy", "culture", "crafts", "active", "theater", "film"];
 
 type DraftDate = { startsAt: string; endsAt: string | null };
 
