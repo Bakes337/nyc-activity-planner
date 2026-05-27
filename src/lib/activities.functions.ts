@@ -456,6 +456,16 @@ Schema:
   "durationMinutes": number | null
 }
 
+Category mapping hints:
+- "crafts" = hands-on making: pottery, painting, candle-making, jewelry, woodworking, cooking classes, cocktail classes, and stained-glass making.
+- "culture" = museums, galleries, exhibits.
+- "active" = outdoors / physical: hiking, kayaking, biking, yoga, fitness.
+- "theater" = plays, musicals, opera, Broadway.
+- "music" = concerts, DJ sets, open mic.
+- "comedy" = stand-up, improv, sketch.
+- "food" = restaurants, food tours, tastings (non-class).
+- "film" = screenings, movie nights, film festivals.
+
 IMPORTANT: For "durationMinutes" — convert the typical session length to MINUTES:
   - "3-4 hours" -> 210 (midpoint)
   - "2 hours" -> 120
