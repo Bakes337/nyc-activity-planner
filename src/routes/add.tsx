@@ -38,7 +38,7 @@ interface Draft {
   notes: string;
   sourceUrl: string;
   dates: DraftDate[];
-  durationMinutes: string;
+  durationHours: string;
 }
 
 function fromParsed(p: ParsedActivity): Draft {
@@ -55,7 +55,11 @@ function fromParsed(p: ParsedActivity): Draft {
     notes: p.notes ?? "",
     sourceUrl: p.sourceUrl,
     dates: p.dates.map((d) => ({ startsAt: d.startsAt, endsAt: d.endsAt })),
-    durationMinutes: p.durationMinutes != null ? String(p.durationMinutes) : "",
+    durationHours:
+      p.durationMinutes != null
+        ? // 210 -> "3.5", 60 -> "1", 90 -> "1.5"
+          String(Math.round((p.durationMinutes / 60) * 4) / 4)
+        : "",
   };
 }
 
@@ -73,7 +77,7 @@ function emptyDraft(): Draft {
     notes: "",
     sourceUrl: "",
     dates: [],
-    durationMinutes: "",
+    durationHours: "",
   };
 }
 
@@ -149,8 +153,9 @@ function AddPage() {
             .filter(Boolean),
           dates: draft.dates.filter((d) => d.startsAt),
           durationMinutes: (() => {
-            const n = parseInt(draft.durationMinutes, 10);
-            return Number.isFinite(n) && n > 0 ? n : null;
+            const h = parseFloat(draft.durationHours);
+            if (!Number.isFinite(h) || h <= 0) return null;
+            return Math.round(h * 60);
           })(),
         },
       });
@@ -369,14 +374,15 @@ function DraftForm({
           </Field>
         </div>
 
-        <Field label="Duration (minutes)">
+        <Field label="Duration (hours)">
           <input
             type="number"
             inputMode="numeric"
-            min={1}
-            value={draft.durationMinutes}
-            onChange={(e) => set("durationMinutes", e.target.value)}
-            placeholder="e.g. 90, 210 for 3.5 hrs"
+            min={0}
+            step={0.25}
+            value={draft.durationHours}
+            onChange={(e) => set("durationHours", e.target.value)}
+            placeholder="e.g. 1.5, 3.5"
             className={inputCls}
           />
         </Field>
