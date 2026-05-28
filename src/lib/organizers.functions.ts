@@ -147,7 +147,10 @@ function applyFilters(events: ScrapedEvent[], filters: OrganizerFilters): Scrape
     if (filters.hideSoldOut && e.isSoldOut) return false;
     if (filters.boroughs.length > 0) {
       const b = e.borough.trim();
-      if (!filters.boroughs.includes(b as (typeof BOROUGHS)[number])) return false;
+      // Be lenient: if Firecrawl couldn't infer a borough, keep the event
+      // rather than silently dropping it. Only drop when we have a known
+      // borough that isn't in the user's filter list.
+      if (b && !filters.boroughs.includes(b as (typeof BOROUGHS)[number])) return false;
     }
     return true;
   });
