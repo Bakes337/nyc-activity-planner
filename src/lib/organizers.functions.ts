@@ -324,19 +324,28 @@ async function refreshOne(orgRow: {
   try {
     const scraped = await scrapeEventbriteOrganizer(apiKey, orgRow.url);
     const matches = applyFilters(scraped.events, filters);
-    const offBoroughIds = [...new Set(
+    const nowMs = Date.now();
+    const isPast = (iso: string | null) => {
+      if (!iso) return false;
+      const t = Date.parse(iso);
+      return !Number.isNaN(t) && t < nowMs;
+    };
+    const droppedIds = [...new Set(
       scraped.events
-        .filter((event) => !matchesBoroughFilter(event, filters))
+        .filter(
+          (event) =>
+            !matchesBoroughFilter(event, filters) || isPast(event.startsAt),
+        )
         .map((event) => event.externalId),
     )];
 
-    if (offBoroughIds.length > 0) {
+    if (droppedIds.length > 0) {
       const { error: dismissError } = await supabaseAdmin
         .from("organizer_suggestions")
         .update({ status: "dismissed" })
         .eq("organizer_id", orgRow.id)
         .eq("status", "new")
-        .in("external_id", offBoroughIds);
+        .in("external_id", droppedIds);
       if (dismissError) throw new Error(dismissError.message);
     }
 
