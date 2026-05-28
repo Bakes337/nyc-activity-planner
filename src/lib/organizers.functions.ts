@@ -29,6 +29,74 @@ function safeIso(s: unknown): string | null {
   return new Date(t).toISOString();
 }
 
+// Map NYC neighborhoods → borough. Used when Firecrawl returns a neighborhood
+// (e.g. "East Village") but can't determine the borough on its own.
+const NEIGHBORHOOD_TO_BOROUGH: Record<string, (typeof BOROUGHS)[number]> = {
+  // Manhattan
+  "midtown": "Manhattan", "midtown east": "Manhattan", "midtown west": "Manhattan",
+  "midtown manhattan": "Manhattan", "times square": "Manhattan", "hell's kitchen": "Manhattan",
+  "hells kitchen": "Manhattan", "chelsea": "Manhattan", "flatiron": "Manhattan",
+  "flatiron district": "Manhattan", "gramercy": "Manhattan", "gramercy park": "Manhattan",
+  "kips bay": "Manhattan", "murray hill": "Manhattan", "nomad": "Manhattan",
+  "noho": "Manhattan", "soho": "Manhattan", "tribeca": "Manhattan",
+  "financial district": "Manhattan", "fidi": "Manhattan", "battery park": "Manhattan",
+  "battery park city": "Manhattan", "lower east side": "Manhattan", "les": "Manhattan",
+  "east village": "Manhattan", "west village": "Manhattan", "greenwich village": "Manhattan",
+  "the village": "Manhattan", "chinatown": "Manhattan", "little italy": "Manhattan",
+  "two bridges": "Manhattan", "civic center": "Manhattan", "upper east side": "Manhattan",
+  "ues": "Manhattan", "upper west side": "Manhattan", "uws": "Manhattan",
+  "lincoln square": "Manhattan", "lenox hill": "Manhattan", "yorkville": "Manhattan",
+  "carnegie hill": "Manhattan", "morningside heights": "Manhattan", "harlem": "Manhattan",
+  "east harlem": "Manhattan", "spanish harlem": "Manhattan", "el barrio": "Manhattan",
+  "washington heights": "Manhattan", "inwood": "Manhattan", "hamilton heights": "Manhattan",
+  "hudson yards": "Manhattan", "meatpacking": "Manhattan", "meatpacking district": "Manhattan",
+  "manhattan": "Manhattan", "nyc": "Manhattan", "new york": "Manhattan",
+  // Brooklyn
+  "williamsburg": "Brooklyn", "greenpoint": "Brooklyn", "bushwick": "Brooklyn",
+  "bed-stuy": "Brooklyn", "bedford-stuyvesant": "Brooklyn", "bedford stuyvesant": "Brooklyn",
+  "crown heights": "Brooklyn", "park slope": "Brooklyn", "prospect heights": "Brooklyn",
+  "prospect park": "Brooklyn", "fort greene": "Brooklyn", "clinton hill": "Brooklyn",
+  "dumbo": "Brooklyn", "brooklyn heights": "Brooklyn", "cobble hill": "Brooklyn",
+  "carroll gardens": "Brooklyn", "boerum hill": "Brooklyn", "gowanus": "Brooklyn",
+  "red hook": "Brooklyn", "sunset park": "Brooklyn", "bay ridge": "Brooklyn",
+  "bensonhurst": "Brooklyn", "coney island": "Brooklyn", "brighton beach": "Brooklyn",
+  "sheepshead bay": "Brooklyn", "flatbush": "Brooklyn", "ditmas park": "Brooklyn",
+  "east new york": "Brooklyn", "brownsville": "Brooklyn", "canarsie": "Brooklyn",
+  "downtown brooklyn": "Brooklyn", "brooklyn": "Brooklyn",
+  // Queens
+  "astoria": "Queens", "long island city": "Queens", "lic": "Queens",
+  "sunnyside": "Queens", "woodside": "Queens", "jackson heights": "Queens",
+  "elmhurst": "Queens", "corona": "Queens", "flushing": "Queens",
+  "forest hills": "Queens", "rego park": "Queens", "kew gardens": "Queens",
+  "jamaica": "Queens", "ridgewood": "Queens", "maspeth": "Queens",
+  "ozone park": "Queens", "rockaway": "Queens", "far rockaway": "Queens",
+  "queens": "Queens",
+  // Bronx
+  "south bronx": "Bronx", "mott haven": "Bronx", "fordham": "Bronx",
+  "riverdale": "Bronx", "pelham bay": "Bronx", "concourse": "Bronx",
+  "belmont": "Bronx", "kingsbridge": "Bronx", "bronx": "Bronx",
+  // Staten Island
+  "st. george": "Staten Island", "st george": "Staten Island",
+  "stapleton": "Staten Island", "tompkinsville": "Staten Island",
+  "staten island": "Staten Island",
+};
+
+function inferBorough(rawBorough: string, neighborhood: string, venue: string): string {
+  const b = rawBorough.trim();
+  if ((BOROUGHS as readonly string[]).includes(b)) return b;
+  const candidates = [neighborhood, venue, rawBorough]
+    .map((s) => (s ?? "").toLowerCase().trim())
+    .filter(Boolean);
+  for (const c of candidates) {
+    if (NEIGHBORHOOD_TO_BOROUGH[c]) return NEIGHBORHOOD_TO_BOROUGH[c];
+    // try substring match (e.g. "the east village, manhattan")
+    for (const key of Object.keys(NEIGHBORHOOD_TO_BOROUGH)) {
+      if (c.includes(key)) return NEIGHBORHOOD_TO_BOROUGH[key];
+    }
+  }
+  return "";
+}
+
 // ---------- Firecrawl (organizer page) ----------
 
 interface ScrapedEvent {
