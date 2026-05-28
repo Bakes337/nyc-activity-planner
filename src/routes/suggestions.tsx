@@ -45,7 +45,8 @@ function SuggestionsPage() {
     },
   });
   const dismissMut = useMutation({
-    mutationFn: (id: string) => dismiss({ data: { id } }),
+    mutationFn: ({ id, reason }: { id: string; reason: "not_interested" | "not_available" }) =>
+      dismiss({ data: { id, reason } }),
     onSuccess: () => qc.invalidateQueries({ queryKey: ["suggestions"] }),
   });
 
@@ -71,7 +72,7 @@ function SuggestionsPage() {
         {suggestions.map((s) => {
           const busy =
             (acceptMut.isPending && acceptMut.variables === s.id) ||
-            (dismissMut.isPending && dismissMut.variables === s.id);
+            (dismissMut.isPending && dismissMut.variables?.id === s.id);
           return (
             <div key={s.id} className="paint-card p-3">
               <div className="flex items-start gap-3">
@@ -125,11 +126,18 @@ function SuggestionsPage() {
                   Add to library
                 </button>
                 <button
-                  onClick={() => dismissMut.mutate(s.id)}
+                  onClick={() => dismissMut.mutate({ id: s.id, reason: "not_interested" })}
                   disabled={busy}
                   className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-[11px] font-bold text-[color:var(--ink)] disabled:opacity-50"
                 >
-                  Dismiss
+                  Not interested
+                </button>
+                <button
+                  onClick={() => dismissMut.mutate({ id: s.id, reason: "not_available" })}
+                  disabled={busy}
+                  className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-[11px] font-bold text-[color:var(--ink)] disabled:opacity-50"
+                >
+                  Can't make it
                 </button>
               </div>
             </div>

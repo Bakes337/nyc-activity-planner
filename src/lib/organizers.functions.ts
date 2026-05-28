@@ -224,9 +224,14 @@ async function scrapeEventbriteOrganizer(
 }
 
 function applyFilters(events: ScrapedEvent[], filters: OrganizerFilters): ScrapedEvent[] {
+  const now = Date.now();
   return events.filter((e) => {
     if (filters.hideSoldOut && e.isSoldOut) return false;
     if (!matchesBoroughFilter(e, filters)) return false;
+    if (e.startsAt) {
+      const t = Date.parse(e.startsAt);
+      if (!Number.isNaN(t) && t < now) return false;
+    }
     return true;
   });
 }
@@ -319,19 +324,28 @@ async function refreshOne(orgRow: {
   try {
     const scraped = await scrapeEventbriteOrganizer(apiKey, orgRow.url);
     const matches = applyFilters(scraped.events, filters);
-    const offBoroughIds = [...new Set(
+    const nowMs = Date.now();
+    const isPast = (iso: string | null) => {
+      if (!iso) return false;
+      const t = Date.parse(iso);
+      return !Number.isNaN(t) && t < nowMs;
+    };
+    const droppedIds = [...new Set(
       scraped.events
-        .filter((event) => !matchesBoroughFilter(event, filters))
+        .filter(
+          (event) =>
+            !matchesBoroughFilter(event, filters) || isPast(event.startsAt),
+        )
         .map((event) => event.externalId),
     )];
 
-    if (offBoroughIds.length > 0) {
+    if (droppedIds.length > 0) {
       const { error: dismissError } = await supabaseAdmin
         .from("organizer_suggestions")
         .update({ status: "dismissed" })
         .eq("organizer_id", orgRow.id)
         .eq("status", "new")
-        .in("external_id", offBoroughIds);
+        .in("external_id", droppedIds);
       if (dismissError) throw new Error(dismissError.message);
     }
 
@@ -409,21 +423,28 @@ export const refreshAllOrganizers = createServerFn({ method: "POST" }).handler(a
 });
 
 export const listSuggestions = createServerFn({ method: "GET" }).handler(async () => {
+  const nowIso = new Date().toISOString();
   const { data, error } = await supabaseAdmin
     .from("organizer_suggestions")
     .select("*, followed_organizers(name, url)")
     .eq("status", "new")
+    .or(`starts_at.is.null,starts_at.gte.${nowIso}`)
     .order("starts_at", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);
   return data ?? [];
 });
 
 export const dismissSuggestion = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().uuid() }))
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      reason: z.enum(["not_interested", "not_available"]).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { error } = await supabaseAdmin
       .from("organizer_suggestions")
-      .update({ status: "dismissed" })
+      .update({ status: "dismissed", dismiss_reason: data.reason ?? null })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
