@@ -218,11 +218,11 @@ function applyFilters(events: ScrapedEvent[], filters: OrganizerFilters): Scrape
   return events.filter((e) => {
     if (filters.hideSoldOut && e.isSoldOut) return false;
     if (filters.boroughs.length > 0) {
-      const b = e.borough.trim();
-      // Be lenient: if Firecrawl couldn't infer a borough, keep the event
-      // rather than silently dropping it. Only drop when we have a known
-      // borough that isn't in the user's filter list.
-      if (b && !filters.boroughs.includes(b as (typeof BOROUGHS)[number])) return false;
+      const inferredBorough = inferBorough(e.borough, e.neighborhood, e.venue);
+      // Be strict when a borough filter is set: only keep events we can
+      // confidently place inside one of the requested boroughs.
+      if (!inferredBorough) return false;
+      if (!filters.boroughs.includes(inferredBorough as (typeof BOROUGHS)[number])) return false;
     }
     return true;
   });
