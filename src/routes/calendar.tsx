@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import {
   CATEGORY_META,
+  categoryMeta,
   formatTime,
   type Activity,
   type ActivityDate,

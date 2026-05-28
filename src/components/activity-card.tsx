@@ -2,6 +2,7 @@ import { Link } from "@tanstack/react-router";
 import {
   type Activity,
   CATEGORY_META,
+  categoryMeta,
   formatDate,
   formatTime,
   nextDate,

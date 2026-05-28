@@ -6,6 +6,7 @@ import { AppShell, PageHeader } from "../components/app-shell";
 import { ActivityCard } from "../components/activity-card";
 import {
   CATEGORY_META,
+  categoryMeta,
   type Category,
   type PriceTier,
   nextDate,

@@ -5,6 +5,7 @@ import { useMemo } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import {
   CATEGORY_META,
+  categoryMeta,
   formatDate,
   formatTime,
   seedGradient,

@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
-import { ACTIVITIES, CATEGORY_META, nextDate, formatDate } from "../lib/data";
+import { ACTIVITIES, CATEGORY_META, categoryMeta, nextDate, formatDate } from "../lib/data";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
