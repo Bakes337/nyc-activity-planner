@@ -423,21 +423,28 @@ export const refreshAllOrganizers = createServerFn({ method: "POST" }).handler(a
 });
 
 export const listSuggestions = createServerFn({ method: "GET" }).handler(async () => {
+  const nowIso = new Date().toISOString();
   const { data, error } = await supabaseAdmin
     .from("organizer_suggestions")
     .select("*, followed_organizers(name, url)")
     .eq("status", "new")
+    .or(`starts_at.is.null,starts_at.gte.${nowIso}`)
     .order("starts_at", { ascending: true, nullsFirst: false });
   if (error) throw new Error(error.message);
   return data ?? [];
 });
 
 export const dismissSuggestion = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().uuid() }))
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      reason: z.enum(["not_interested", "not_available"]).optional(),
+    }),
+  )
   .handler(async ({ data }) => {
     const { error } = await supabaseAdmin
       .from("organizer_suggestions")
-      .update({ status: "dismissed" })
+      .update({ status: "dismissed", dismiss_reason: data.reason ?? null })
       .eq("id", data.id);
     if (error) throw new Error(error.message);
     return { ok: true };
