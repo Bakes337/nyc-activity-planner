@@ -5,6 +5,7 @@ import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import {
   CATEGORY_META,
+  categoryMeta,
   formatTime,
   type Activity,
   type ActivityDate,
@@ -148,7 +149,7 @@ function CalendarPage() {
                       key={it.date.id}
                       className="h-1.5 w-1.5 rounded-full"
                       style={{
-                        background: CATEGORY_META[it.activity.category].color,
+                        background: categoryMeta(it.activity.category).color,
                       }}
                     />
                   ))}
@@ -194,7 +195,7 @@ function CalendarPage() {
             ) : (
               <div className="space-y-2">
                 {b.items.map(({ activity, date }) => {
-                  const meta = CATEGORY_META[activity.category];
+                  const meta = categoryMeta(activity.category);
                   return (
                     <Link
                       key={date.id}

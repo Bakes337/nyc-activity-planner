@@ -1,7 +1,7 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
-import { ACTIVITIES, CATEGORY_META, nextDate, formatDate } from "../lib/data";
+import { ACTIVITIES, CATEGORY_META, categoryMeta, nextDate, formatDate } from "../lib/data";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -107,7 +107,7 @@ function ChatPage() {
                 <div className="mt-3 space-y-2">
                   {m.cards.map((id) => {
                     const a = ACTIVITIES.find((x) => x.id === id)!;
-                    const meta = CATEGORY_META[a.category];
+                    const meta = categoryMeta(a.category);
                     const n = nextDate(a);
                     return (
                       <div

@@ -58,6 +58,15 @@ export const CATEGORY_META: Record<
   film: { label: "Film", color: "var(--neon-coral)", emoji: "●" },
 };
 
+// Safe lookup: tolerates unknown/legacy category strings coming from the DB
+// (e.g. "craft" singular) without crashing the page.
+export function categoryMeta(category: string | undefined | null) {
+  if (category && category in CATEGORY_META) {
+    return CATEGORY_META[category as Category];
+  }
+  return { label: "Other", color: "var(--cobalt)", emoji: "✦" };
+}
+
 // Anchor "today" to a reasonable date for demo data
 const TODAY = new Date();
 const d = (offsetDays: number, hour = 19, minute = 30) => {

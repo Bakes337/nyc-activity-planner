@@ -6,6 +6,7 @@ import { AppShell, PageHeader } from "../components/app-shell";
 import { ActivityCard } from "../components/activity-card";
 import {
   CATEGORY_META,
+  categoryMeta,
   type Category,
   type PriceTier,
   nextDate,
@@ -167,7 +168,7 @@ function Index() {
             <span className="mx-0.5 h-5 w-px rounded-full bg-[color:var(--border)]" aria-hidden />
 
             {CATS.map((c) => {
-              const m = CATEGORY_META[c];
+              const m = categoryMeta(c);
               const active = cats.has(c);
               return (
                 <button
