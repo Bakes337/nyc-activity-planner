@@ -1,0 +1,1 @@
+ALTER TABLE public.organizer_suggestions ADD COLUMN dismiss_reason text;

@@ -120,6 +120,7 @@ export type Database = {
         Row: {
           borough: string
           created_at: string
+          dismiss_reason: string | null
           ends_at: string | null
           external_id: string
           id: string
@@ -136,6 +137,7 @@ export type Database = {
         Insert: {
           borough?: string
           created_at?: string
+          dismiss_reason?: string | null
           ends_at?: string | null
           external_id: string
           id?: string
@@ -152,6 +154,7 @@ export type Database = {
         Update: {
           borough?: string
           created_at?: string
+          dismiss_reason?: string | null
           ends_at?: string | null
           external_id?: string
           id?: string
