@@ -167,7 +167,7 @@ function Index() {
             <span className="mx-0.5 h-5 w-px rounded-full bg-[color:var(--border)]" aria-hidden />
 
             {CATS.map((c) => {
-              const m = CATEGORY_META[c];
+              const m = categoryMeta(c);
               const active = cats.has(c);
               return (
                 <button

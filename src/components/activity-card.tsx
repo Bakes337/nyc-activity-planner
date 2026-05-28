@@ -9,7 +9,7 @@ import {
 } from "../lib/data";
 
 export function ActivityCard({ a }: { a: Activity }) {
-  const meta = CATEGORY_META[a.category];
+  const meta = categoryMeta(a.category);
   const next = nextDate(a);
   const soldOut = next?.isSoldOut;
 

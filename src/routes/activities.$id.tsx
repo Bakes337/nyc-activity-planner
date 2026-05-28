@@ -77,7 +77,7 @@ function ActivityDetailPage() {
     );
   }
 
-  const meta = CATEGORY_META[activity.category];
+  const meta = categoryMeta(activity.category);
   const upcoming = [...activity.dates]
     .filter((d) => new Date(d.startsAt).getTime() >= Date.now() - 3600 * 1000)
     .sort(

@@ -107,7 +107,7 @@ function ChatPage() {
                 <div className="mt-3 space-y-2">
                   {m.cards.map((id) => {
                     const a = ACTIVITIES.find((x) => x.id === id)!;
-                    const meta = CATEGORY_META[a.category];
+                    const meta = categoryMeta(a.category);
                     const n = nextDate(a);
                     return (
                       <div
