@@ -224,9 +224,14 @@ async function scrapeEventbriteOrganizer(
 }
 
 function applyFilters(events: ScrapedEvent[], filters: OrganizerFilters): ScrapedEvent[] {
+  const now = Date.now();
   return events.filter((e) => {
     if (filters.hideSoldOut && e.isSoldOut) return false;
     if (!matchesBoroughFilter(e, filters)) return false;
+    if (e.startsAt) {
+      const t = Date.parse(e.startsAt);
+      if (!Number.isNaN(t) && t < now) return false;
+    }
     return true;
   });
 }
