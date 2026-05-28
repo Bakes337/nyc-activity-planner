@@ -1,0 +1,1 @@
+DELETE FROM public.activities WHERE id = 'cc8c025f-479f-43c9-9b60-bb70ed0dd6ee';
