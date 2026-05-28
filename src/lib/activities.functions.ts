@@ -584,7 +584,35 @@ const SaveInput = z.object({
   venue: z.string().max(200).default(""),
   neighborhood: z.string().max(200).default(""),
   borough: z.enum(BOROUGHS).default("Manhattan"),
-  category: z.enum(CATEGORIES).default("music"),
+  category: z
+    .preprocess((v) => {
+      if (typeof v !== "string") return v;
+      const s = v.toLowerCase().trim();
+      if ((CATEGORIES as readonly string[]).includes(s)) return s;
+      // Map common LLM aliases to known categories.
+      const alias: Record<string, (typeof CATEGORIES)[number]> = {
+        art: "crafts",
+        arts: "crafts",
+        craft: "crafts",
+        outdoors: "active",
+        outdoor: "active",
+        sports: "active",
+        fitness: "active",
+        movie: "film",
+        movies: "film",
+        cinema: "film",
+        dining: "food",
+        restaurant: "food",
+        drinks: "food",
+        museum: "culture",
+        gallery: "culture",
+        show: "theater",
+        dance: "music",
+        concert: "music",
+      };
+      return alias[s] ?? "music";
+    }, z.enum(CATEGORIES))
+    .default("music"),
   priceTier: z.enum(PRICE_TIERS).default("$$"),
   priceNote: z.string().max(80).nullable().optional(),
   status: z.enum(STATUSES).default("idea"),
