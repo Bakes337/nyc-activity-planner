@@ -198,7 +198,11 @@ async function scrapeEventbriteOrganizer(
       endsAt: safeIso(o.endLocal),
       venue: typeof o.venue === "string" ? o.venue : "",
       neighborhood: typeof o.neighborhood === "string" ? o.neighborhood : "",
-      borough: typeof o.borough === "string" ? o.borough : "",
+      borough: inferBorough(
+        typeof o.borough === "string" ? o.borough : "",
+        typeof o.neighborhood === "string" ? o.neighborhood : "",
+        typeof o.venue === "string" ? o.venue : "",
+      ),
       isSoldOut: o.soldOut === true,
       imageUrl: typeof o.imageUrl === "string" ? o.imageUrl : null,
     });
@@ -417,9 +421,10 @@ export const acceptSuggestion = createServerFn({ method: "POST" })
       .single();
     if (error || !s) throw new Error(error?.message ?? "Suggestion not found");
 
-    const borough = (BOROUGHS as readonly string[]).includes(s.borough)
-      ? (s.borough as (typeof BOROUGHS)[number])
-      : "Manhattan";
+    const inferred = inferBorough(s.borough ?? "", s.neighborhood ?? "", s.venue ?? "");
+    const borough = ((BOROUGHS as readonly string[]).includes(inferred)
+      ? inferred
+      : "Manhattan") as (typeof BOROUGHS)[number];
 
     const seed =
       s.title.toLowerCase().replace(/[^a-z0-9]+/g, "-").slice(0, 40) || "activity";
