@@ -97,6 +97,15 @@ function inferBorough(rawBorough: string, neighborhood: string, venue: string): 
   return "";
 }
 
+function matchesBoroughFilter(event: ScrapedEvent, filters: OrganizerFilters): boolean {
+  if (filters.boroughs.length === 0) return true;
+
+  const inferredBorough = inferBorough(event.borough, event.neighborhood, event.venue);
+  if (!inferredBorough) return false;
+
+  return filters.boroughs.includes(inferredBorough as (typeof BOROUGHS)[number]);
+}
+
 // ---------- Firecrawl (organizer page) ----------
 
 interface ScrapedEvent {
@@ -217,13 +226,7 @@ async function scrapeEventbriteOrganizer(
 function applyFilters(events: ScrapedEvent[], filters: OrganizerFilters): ScrapedEvent[] {
   return events.filter((e) => {
     if (filters.hideSoldOut && e.isSoldOut) return false;
-    if (filters.boroughs.length > 0) {
-      const b = e.borough.trim();
-      // Be lenient: if Firecrawl couldn't infer a borough, keep the event
-      // rather than silently dropping it. Only drop when we have a known
-      // borough that isn't in the user's filter list.
-      if (b && !filters.boroughs.includes(b as (typeof BOROUGHS)[number])) return false;
-    }
+    if (!matchesBoroughFilter(e, filters)) return false;
     return true;
   });
 }
@@ -316,6 +319,21 @@ async function refreshOne(orgRow: {
   try {
     const scraped = await scrapeEventbriteOrganizer(apiKey, orgRow.url);
     const matches = applyFilters(scraped.events, filters);
+    const offBoroughIds = [...new Set(
+      scraped.events
+        .filter((event) => !matchesBoroughFilter(event, filters))
+        .map((event) => event.externalId),
+    )];
+
+    if (offBoroughIds.length > 0) {
+      const { error: dismissError } = await supabaseAdmin
+        .from("organizer_suggestions")
+        .update({ status: "dismissed" })
+        .eq("organizer_id", orgRow.id)
+        .eq("status", "new")
+        .in("external_id", offBoroughIds);
+      if (dismissError) throw new Error(dismissError.message);
+    }
 
     let added = 0;
     if (matches.length > 0) {
