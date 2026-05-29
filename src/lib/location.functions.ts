@@ -2,6 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
+import type { Json } from "@/integrations/supabase/types";
 
 const GATEWAY = "https://connector-gateway.lovable.dev/google_maps";
 
@@ -207,7 +208,7 @@ export const getActivityTravel = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("activities")
-      .update({ travel_from_home: travel as unknown as Record<string, unknown> })
+      .update({ travel_from_home: travel as unknown as Json })
       .eq("id", act.id);
 
     return { status: "ok" as const, travel };
