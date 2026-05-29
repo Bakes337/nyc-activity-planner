@@ -49,7 +49,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                       : "text-[color:var(--muted-foreground)] hover:text-[color:var(--ink)]")
                   }
                 >
-                  <span className="text-base leading-none">{t.icon}</span>
+                  <t.Icon size={18} strokeWidth={2.5} className="leading-none" />
                   <span>{t.label}</span>
                   {active && (
                     <span
