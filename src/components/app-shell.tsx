@@ -3,7 +3,7 @@ import { Fragment, type ReactNode } from "react";
 import { Library, Calendar, MessageCircle, Music } from "lucide-react";
 
 const TABS = [
-  { to: "/", label: "Library", Icon: BookOpen },
+  { to: "/", label: "Library", Icon: Library },
   { to: "/calendar", label: "Calendar", Icon: Calendar },
   { to: "/chat", label: "Chat", Icon: MessageCircle },
   { to: "/playlists", label: "Playlists", Icon: Music },
