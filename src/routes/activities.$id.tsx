@@ -12,6 +12,7 @@ import {
 } from "../lib/data";
 import { listActivities, deleteActivity } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
+import { getActivityTravel } from "../lib/location.functions";
 
 export const Route = createFileRoute("/activities/$id")({
   head: () => ({
@@ -36,10 +37,17 @@ function ActivityDetailPage() {
   const qc = useQueryClient();
   const fetchList = useServerFn(listActivities);
   const del = useServerFn(deleteActivity);
+  const fetchTravel = useServerFn(getActivityTravel);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
     queryFn: () => fetchList(),
+  });
+
+  const { data: travelResp, isLoading: travelLoading } = useQuery({
+    queryKey: ["travel", id],
+    queryFn: () => fetchTravel({ data: { activityId: id } }),
+    staleTime: 1000 * 60 * 60,
   });
 
   const activity = useMemo(() => {
@@ -165,6 +173,8 @@ function ActivityDetailPage() {
           </div>
         )}
 
+        <TravelFromHome loading={travelLoading} resp={travelResp} />
+
         <section className="mt-6">
           <h2 className="font-display text-xl">Upcoming dates</h2>
           {upcoming.length === 0 ? (
@@ -232,5 +242,79 @@ function ActivityDetailPage() {
         </div>
       </div>
     </AppShell>
+  );
+}
+
+type TravelLeg = { durationSeconds: number | null; distanceMeters: number | null };
+type TravelResp =
+  | { status: "ok"; travel: { drive: TravelLeg | null; transit: TravelLeg | null; walk: TravelLeg | null } }
+  | { status: "no_home" | "no_activity" | "no_venue" };
+
+function fmtDuration(s: number | null): string {
+  if (s == null) return "—";
+  const m = Math.round(s / 60);
+  if (m < 60) return `${m} min`;
+  const h = Math.floor(m / 60);
+  const r = m % 60;
+  return r ? `${h}h ${r}m` : `${h}h`;
+}
+function fmtDistance(m: number | null): string {
+  if (m == null) return "";
+  const mi = m / 1609.34;
+  return mi < 10 ? `${mi.toFixed(1)} mi` : `${Math.round(mi)} mi`;
+}
+
+function TravelFromHome({ loading, resp }: { loading: boolean; resp: TravelResp | undefined }) {
+  if (loading) {
+    return (
+      <section className="mt-5 paint-card p-3 text-xs text-[color:var(--muted-foreground)]">
+        Calculating travel from home…
+      </section>
+    );
+  }
+  if (!resp) return null;
+  if (resp.status === "no_home") {
+    return (
+      <section className="mt-5 paint-card p-3 text-xs">
+        <div className="font-semibold text-[color:var(--ink)]">From home</div>
+        <p className="mt-1 text-[color:var(--muted-foreground)]">
+          Add your home address in{" "}
+          <Link to="/settings" className="underline">Settings</Link> to see travel times.
+        </p>
+      </section>
+    );
+  }
+  if (resp.status !== "ok") {
+    return (
+      <section className="mt-5 paint-card p-3 text-xs text-[color:var(--muted-foreground)]">
+        Couldn't calculate travel for this venue.
+      </section>
+    );
+  }
+  const { drive, transit, walk } = resp.travel;
+  const items: Array<{ key: string; label: string; leg: TravelLeg | null }> = [
+    { key: "drive", label: "Drive", leg: drive },
+    { key: "transit", label: "Transit", leg: transit },
+    { key: "walk", label: "Walk", leg: walk },
+  ];
+  return (
+    <section className="mt-5">
+      <h2 className="font-display text-xl">From home</h2>
+      <div className="mt-2 grid grid-cols-3 gap-2">
+        {items.map((it) => (
+          <div key={it.key} className="paint-card p-3 text-center">
+            <div className="text-[10px] font-bold uppercase tracking-wider text-[color:var(--muted-foreground)]">
+              {it.label}
+            </div>
+            <div className="mt-1 font-display text-lg leading-tight">
+              {fmtDuration(it.leg?.durationSeconds ?? null)}
+            </div>
+            <div className="text-[10px] text-[color:var(--muted-foreground)]">
+              {fmtDistance(it.leg?.distanceMeters ?? null)}
+            </div>
+          </div>
+        ))}
+      </div>
+    </section>
   );
 }

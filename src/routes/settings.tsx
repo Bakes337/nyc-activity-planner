@@ -10,6 +10,7 @@ import {
   unfollowOrganizer,
   updateOrganizerFilters,
 } from "../lib/organizers.functions";
+import { getHomeProfile, saveHomeAddress } from "../lib/location.functions";
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 type Borough = (typeof BOROUGHS)[number];
@@ -78,6 +79,22 @@ function SettingsPage() {
     onSuccess: () => qc.invalidateQueries({ queryKey: ["organizers"] }),
   });
 
+  // Home address
+  const getHome = useServerFn(getHomeProfile);
+  const saveHome = useServerFn(saveHomeAddress);
+  const { data: home } = useQuery({ queryKey: ["home-profile"], queryFn: () => getHome() });
+  const [addr, setAddr] = useState("");
+  const [homeErr, setHomeErr] = useState<string | null>(null);
+  const homeMut = useMutation({
+    mutationFn: (address: string) => saveHome({ data: { address } }),
+    onSuccess: () => {
+      setAddr("");
+      setHomeErr(null);
+      qc.invalidateQueries({ queryKey: ["home-profile"] });
+    },
+    onError: (e) => setHomeErr(e instanceof Error ? e.message : String(e)),
+  });
+
   function toggleBorough(b: Borough) {
     const next = new Set(boroughs);
     if (next.has(b)) next.delete(b);
@@ -93,6 +110,33 @@ function SettingsPage() {
         subtitle="Follow Eventbrite organizers and tune their filters."
       />
       <main className="space-y-5 px-5 pb-6">
+        <section className="paint-card space-y-3 p-4">
+          <h2 className="font-display text-xl">Home address</h2>
+          <p className="text-xs text-[color:var(--muted-foreground)]">
+            Used to estimate drive, transit, and walking time to each saved activity.
+          </p>
+          {home?.home_address && (
+            <div className="rounded-xl bg-white/80 px-3 py-2 text-xs">
+              <div className="font-semibold text-[color:var(--ink)]">Current</div>
+              <div className="text-[color:var(--muted-foreground)]">{home.home_address}</div>
+            </div>
+          )}
+          <input
+            value={addr}
+            onChange={(e) => setAddr(e.target.value)}
+            placeholder="123 Main St, New York, NY"
+            className="w-full rounded-full bg-white px-4 py-2.5 text-sm outline-none ring-1 ring-[color:var(--border)]"
+          />
+          {homeErr && <p className="text-xs text-[color:var(--neon-pink)]">{homeErr}</p>}
+          <button
+            onClick={() => homeMut.mutate(addr)}
+            disabled={!addr.trim() || homeMut.isPending}
+            className="rounded-full bg-[color:var(--cobalt)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[color:var(--cream)] disabled:opacity-50"
+          >
+            {homeMut.isPending ? "Saving…" : home?.home_address ? "Update home" : "Save home"}
+          </button>
+        </section>
+
         <section className="paint-card space-y-3 p-4">
           <h2 className="font-display text-xl">Follow an organizer</h2>
           <p className="text-xs text-[color:var(--muted-foreground)]">
