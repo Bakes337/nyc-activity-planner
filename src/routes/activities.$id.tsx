@@ -12,6 +12,7 @@ import {
 } from "../lib/data";
 import { listActivities, deleteActivity } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
+import { getActivityTravel } from "../lib/location.functions";
 
 export const Route = createFileRoute("/activities/$id")({
   head: () => ({
@@ -36,10 +37,17 @@ function ActivityDetailPage() {
   const qc = useQueryClient();
   const fetchList = useServerFn(listActivities);
   const del = useServerFn(deleteActivity);
+  const fetchTravel = useServerFn(getActivityTravel);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
     queryFn: () => fetchList(),
+  });
+
+  const { data: travelResp, isLoading: travelLoading } = useQuery({
+    queryKey: ["travel", id],
+    queryFn: () => fetchTravel({ data: { activityId: id } }),
+    staleTime: 1000 * 60 * 60,
   });
 
   const activity = useMemo(() => {
