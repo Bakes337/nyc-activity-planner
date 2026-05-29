@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 const TABS = [
   { to: "/", label: "Library", icon: "▦" },
@@ -24,10 +24,9 @@ export function AppShell({ children }: { children: ReactNode }) {
             // insert the Add (+) action between Calendar (i=1) and Chat (i=2)
             const showAddBefore = i === 2;
             return (
-              <>
+              <Fragment key={t.to}>
                 {showAddBefore && (
                   <Link
-                    key="__add"
                     to="/add"
                     aria-label="Add activity"
                     className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl font-light text-[color:var(--cream)] shadow-[0_8px_18px_-6px_rgba(255,61,165,0.55)] ring-2 ring-[color:var(--cream)] transition active:scale-95"
@@ -39,7 +38,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     +
                   </Link>
                 )}
-              <div key={t.to} className="flex flex-1 justify-center">
+              <div className="flex flex-1 justify-center">
                 <Link
                   to={t.to}
                   className={
@@ -59,7 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                 </Link>
               </div>
-              </>
+              </Fragment>
             );
           })}
         </div>
