@@ -1,7 +1,9 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useState } from "react";
+import { useServerFn } from "@tanstack/react-start";
 import { AppShell, PageHeader } from "../components/app-shell";
-import { ACTIVITIES, CATEGORY_META, categoryMeta, nextDate, formatDate } from "../lib/data";
+import { ACTIVITIES, categoryMeta, nextDate, formatDate } from "../lib/data";
+import { askConcierge } from "../lib/chat.functions";
 
 export const Route = createFileRoute("/chat")({
   head: () => ({
@@ -38,46 +40,37 @@ const SUGGESTIONS = [
   "Splurge for an anniversary",
 ];
 
-function mockAnswer(q: string): Msg {
-  const lower = q.toLowerCase();
-  let picks = ACTIVITIES;
-  if (lower.includes("cheap") || lower.includes("free"))
-    picks = picks.filter((a) => a.priceTier === "free" || a.priceTier === "$");
-  if (lower.includes("brooklyn"))
-    picks = picks.filter((a) => a.borough === "Brooklyn");
-  if (lower.includes("outdoor"))
-    picks = picks.filter((a) => a.category === "active");
-  if (lower.includes("date"))
-    picks = picks.filter((a) =>
-      ["film", "food", "music", "theater"].includes(a.category),
-    );
-  if (lower.includes("splurge") || lower.includes("anniversary"))
-    picks = picks.filter((a) => a.priceTier === "$$$");
-  if (lower.includes("weekend")) {
-    picks = picks.filter((a) => {
-      const n = nextDate(a);
-      if (!n) return a.kind === "timeless";
-      const day = new Date(n.startsAt).getDay();
-      return day === 0 || day === 6;
-    });
-  }
-  picks = picks.slice(0, 3);
-  const intro = picks.length
-    ? `Here are ${picks.length} from your library that fit:`
-    : "Nothing in your library matches yet — want to add one?";
-  return { role: "assistant", text: intro, cards: picks.map((p) => p.id) };
-}
-
 function ChatPage() {
   const [messages, setMessages] = useState<Msg[]>(SEED_MESSAGES);
   const [input, setInput] = useState("");
+  const [isThinking, setIsThinking] = useState(false);
+  const ask = useServerFn(askConcierge);
 
-  function send(text: string) {
-    if (!text.trim()) return;
+  async function send(text: string) {
+    if (!text.trim() || isThinking) return;
     const userMsg: Msg = { role: "user", text };
-    const reply = mockAnswer(text);
-    setMessages((m) => [...m, userMsg, reply]);
+    const nextMessages = [...messages, userMsg];
+    setMessages(nextMessages);
     setInput("");
+    setIsThinking(true);
+    try {
+      const payload = nextMessages
+        .filter((m) => m.text.trim().length > 0)
+        .map((m) => ({ role: m.role, content: m.text }));
+      const res = await ask({ data: { messages: payload } });
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", text: res.text, cards: res.cards },
+      ]);
+    } catch (err) {
+      console.error(err);
+      setMessages((m) => [
+        ...m,
+        { role: "assistant", text: "The concierge couldn't reach the studio. Try again?" },
+      ]);
+    } finally {
+      setIsThinking(false);
+    }
   }
 
   return (
@@ -134,6 +127,17 @@ function ChatPage() {
             </div>
           </div>
         ))}
+        {isThinking && (
+          <div className="flex justify-start">
+            <div className="max-w-[85%] rounded-2xl bg-white px-4 py-2.5 text-sm leading-snug text-[color:var(--muted-foreground)] shadow-sm">
+              <span className="inline-flex gap-1">
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--cobalt)] [animation-delay:-0.2s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--cobalt)] [animation-delay:-0.1s]" />
+                <span className="h-1.5 w-1.5 animate-bounce rounded-full bg-[color:var(--cobalt)]" />
+              </span>
+            </div>
+          </div>
+        )}
       </main>
 
       <div className="fixed inset-x-0 bottom-24 z-10 mx-auto w-full max-w-[440px] px-3">
@@ -163,9 +167,10 @@ function ChatPage() {
           />
           <button
             type="submit"
-            className="rounded-full bg-[color:var(--neon-pink)] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white"
+            disabled={isThinking}
+            className="rounded-full bg-[color:var(--neon-pink)] px-3 py-1.5 text-xs font-bold uppercase tracking-wider text-white disabled:opacity-50"
           >
-            Ask
+            {isThinking ? "…" : "Ask"}
           </button>
         </form>
       </div>
