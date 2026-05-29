@@ -173,6 +173,8 @@ function ActivityDetailPage() {
           </div>
         )}
 
+        <TravelFromHome loading={travelLoading} resp={travelResp} />
+
         <section className="mt-6">
           <h2 className="font-display text-xl">Upcoming dates</h2>
           {upcoming.length === 0 ? (
