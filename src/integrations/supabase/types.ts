@@ -125,6 +125,83 @@ export type Database = {
         }
         Relationships: []
       }
+      monitor_suggestions: {
+        Row: {
+          created_at: string
+          dismiss_reason: string | null
+          ends_at: string | null
+          id: string
+          monitored_url_id: string
+          price_note: string | null
+          starts_at: string
+          status: string
+        }
+        Insert: {
+          created_at?: string
+          dismiss_reason?: string | null
+          ends_at?: string | null
+          id?: string
+          monitored_url_id: string
+          price_note?: string | null
+          starts_at: string
+          status?: string
+        }
+        Update: {
+          created_at?: string
+          dismiss_reason?: string | null
+          ends_at?: string | null
+          id?: string
+          monitored_url_id?: string
+          price_note?: string | null
+          starts_at?: string
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monitor_suggestions_monitored_url_id_fkey"
+            columns: ["monitored_url_id"]
+            isOneToOne: false
+            referencedRelation: "monitored_urls"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      monitored_urls: {
+        Row: {
+          created_at: string
+          hint: string
+          id: string
+          last_checked_at: string | null
+          last_error: string | null
+          last_seen_dates: Json
+          title: string
+          updated_at: string
+          url: string
+        }
+        Insert: {
+          created_at?: string
+          hint?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_seen_dates?: Json
+          title?: string
+          updated_at?: string
+          url: string
+        }
+        Update: {
+          created_at?: string
+          hint?: string
+          id?: string
+          last_checked_at?: string | null
+          last_error?: string | null
+          last_seen_dates?: Json
+          title?: string
+          updated_at?: string
+          url?: string
+        }
+        Relationships: []
+      }
       organizer_suggestions: {
         Row: {
           borough: string
