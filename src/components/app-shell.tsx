@@ -1,5 +1,5 @@
 import { Link, useRouterState } from "@tanstack/react-router";
-import type { ReactNode } from "react";
+import { Fragment, type ReactNode } from "react";
 
 const TABS = [
   { to: "/", label: "Library", icon: "▦" },
@@ -16,29 +16,29 @@ export function AppShell({ children }: { children: ReactNode }) {
     <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col pb-28">
       {children}
 
-      {/* Floating Action Button */}
-      <Link
-        to="/add"
-        aria-label="Add activity"
-        className="fixed bottom-[5.25rem] left-1/2 z-30 flex h-14 w-14 -translate-x-1/2 items-center justify-center rounded-full text-3xl font-light text-[color:var(--cream)] shadow-[0_12px_28px_-8px_rgba(255,61,165,0.55)] ring-4 ring-[color:var(--cream)] transition active:scale-95"
-        style={{
-          background:
-            "radial-gradient(circle at 30% 30%, #FF7DC4 0%, var(--neon-pink) 60%, #C81E7E 100%)",
-        }}
-      >
-        +
-      </Link>
-
       {/* Bottom tab bar */}
       <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[440px] px-3 pb-3">
         <div className="paint-card relative flex items-center justify-around gap-1 px-2 py-2">
           {TABS.map((t, i) => {
             const active = path === t.to || (t.to === "/" && path === "/");
-            // leave a gap in the middle for the FAB
-            const isMidGap = i === 2;
+            // insert the Add (+) action between Calendar (i=1) and Chat (i=2)
+            const showAddBefore = i === 2;
             return (
-              <div key={t.to} className="flex flex-1 justify-center">
-                {isMidGap && <span className="w-10" aria-hidden />}
+              <Fragment key={t.to}>
+                {showAddBefore && (
+                  <Link
+                    to="/add"
+                    aria-label="Add activity"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl font-light text-[color:var(--cream)] shadow-[0_8px_18px_-6px_rgba(255,61,165,0.55)] ring-2 ring-[color:var(--cream)] transition active:scale-95"
+                    style={{
+                      background:
+                        "radial-gradient(circle at 30% 30%, #FF7DC4 0%, var(--neon-pink) 60%, #C81E7E 100%)",
+                    }}
+                  >
+                    +
+                  </Link>
+                )}
+              <div className="flex flex-1 justify-center">
                 <Link
                   to={t.to}
                   className={
@@ -58,6 +58,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                 </Link>
               </div>
+              </Fragment>
             );
           })}
         </div>
