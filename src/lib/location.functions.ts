@@ -207,7 +207,7 @@ export const getActivityTravel = createServerFn({ method: "POST" })
 
     await supabaseAdmin
       .from("activities")
-      .update({ travel_from_home: travel })
+      .update({ travel_from_home: travel as unknown as Record<string, unknown> })
       .eq("id", act.id);
 
     return { status: "ok" as const, travel };
