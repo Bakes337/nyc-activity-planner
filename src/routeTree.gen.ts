@@ -18,6 +18,7 @@ import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivitiesIdRouteImport } from './routes/activities.$id'
 import { Route as ApiPublicCronRefreshOrganizersRouteImport } from './routes/api/public/cron.refresh-organizers'
+import { Route as ApiPublicCronRefreshMonitorsRouteImport } from './routes/api/public/cron.refresh-monitors'
 
 const SuggestionsRoute = SuggestionsRouteImport.update({
   id: '/suggestions',
@@ -65,6 +66,12 @@ const ApiPublicCronRefreshOrganizersRoute =
     path: '/api/public/cron/refresh-organizers',
     getParentRoute: () => rootRouteImport,
   } as any)
+const ApiPublicCronRefreshMonitorsRoute =
+  ApiPublicCronRefreshMonitorsRouteImport.update({
+    id: '/api/public/cron/refresh-monitors',
+    path: '/api/public/cron/refresh-monitors',
+    getParentRoute: () => rootRouteImport,
+  } as any)
 
 export interface FileRoutesByFullPath {
   '/': typeof IndexRoute
@@ -75,6 +82,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRoutesByTo {
@@ -86,6 +94,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRoutesById {
@@ -98,6 +107,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
 export interface FileRouteTypes {
@@ -111,6 +121,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   fileRoutesByTo: FileRoutesByTo
   to:
@@ -122,6 +133,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   id:
     | '__root__'
@@ -133,6 +145,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   fileRoutesById: FileRoutesById
 }
@@ -145,6 +158,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   ActivitiesIdRoute: typeof ActivitiesIdRoute
+  ApiPublicCronRefreshMonitorsRoute: typeof ApiPublicCronRefreshMonitorsRoute
   ApiPublicCronRefreshOrganizersRoute: typeof ApiPublicCronRefreshOrganizersRoute
 }
 
@@ -213,6 +227,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ApiPublicCronRefreshOrganizersRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/public/cron/refresh-monitors': {
+      id: '/api/public/cron/refresh-monitors'
+      path: '/api/public/cron/refresh-monitors'
+      fullPath: '/api/public/cron/refresh-monitors'
+      preLoaderRoute: typeof ApiPublicCronRefreshMonitorsRouteImport
+      parentRoute: typeof rootRouteImport
+    }
   }
 }
 
@@ -225,6 +246,7 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   ActivitiesIdRoute: ActivitiesIdRoute,
+  ApiPublicCronRefreshMonitorsRoute: ApiPublicCronRefreshMonitorsRoute,
   ApiPublicCronRefreshOrganizersRoute: ApiPublicCronRefreshOrganizersRoute,
 }
 export const routeTree = rootRouteImport

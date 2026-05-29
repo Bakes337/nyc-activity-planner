@@ -11,6 +11,12 @@ import {
   updateOrganizerFilters,
 } from "../lib/organizers.functions";
 import { getHomeProfile, saveHomeAddress } from "../lib/location.functions";
+import {
+  addMonitoredUrl,
+  listMonitoredUrls,
+  refreshMonitoredUrl,
+  removeMonitoredUrl,
+} from "../lib/monitors.functions";
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 type Borough = (typeof BOROUGHS)[number];
@@ -22,6 +28,16 @@ type OrgRow = {
   filters: { boroughs?: string[]; hideSoldOut?: boolean } | null;
   last_checked_at: string | null;
   last_error: string | null;
+};
+
+type MonitorRow = {
+  id: string;
+  url: string;
+  hint: string;
+  title: string;
+  last_checked_at: string | null;
+  last_error: string | null;
+  last_seen_dates: unknown;
 };
 
 export const Route = createFileRoute("/settings")({
@@ -93,6 +109,41 @@ function SettingsPage() {
       qc.invalidateQueries({ queryKey: ["home-profile"] });
     },
     onError: (e) => setHomeErr(e instanceof Error ? e.message : String(e)),
+  });
+
+  // Monitored URLs
+  const listMonitors = useServerFn(listMonitoredUrls);
+  const addMonitor = useServerFn(addMonitoredUrl);
+  const refreshMon = useServerFn(refreshMonitoredUrl);
+  const removeMon = useServerFn(removeMonitoredUrl);
+  const { data: monitors = [] } = useQuery({
+    queryKey: ["monitors"],
+    queryFn: () => listMonitors(),
+  });
+  const [monUrl, setMonUrl] = useState("");
+  const [monHint, setMonHint] = useState("");
+  const [monErr, setMonErr] = useState<string | null>(null);
+  const addMonMut = useMutation({
+    mutationFn: () => addMonitor({ data: { url: monUrl, hint: monHint || undefined } }),
+    onSuccess: () => {
+      setMonUrl("");
+      setMonHint("");
+      setMonErr(null);
+      qc.invalidateQueries({ queryKey: ["monitors"] });
+      qc.invalidateQueries({ queryKey: ["suggestions"] });
+    },
+    onError: (e) => setMonErr(e instanceof Error ? e.message : String(e)),
+  });
+  const refreshMonMut = useMutation({
+    mutationFn: (id: string) => refreshMon({ data: { id } }),
+    onSuccess: () => {
+      qc.invalidateQueries({ queryKey: ["monitors"] });
+      qc.invalidateQueries({ queryKey: ["suggestions"] });
+    },
+  });
+  const removeMonMut = useMutation({
+    mutationFn: (id: string) => removeMon({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["monitors"] }),
   });
 
   function toggleBorough(b: Borough) {
@@ -213,6 +264,83 @@ function SettingsPage() {
             />
           ))}
         </section>
+
+        <section className="paint-card space-y-3 p-4">
+          <h2 className="font-display text-xl">Monitor a page</h2>
+          <p className="text-xs text-[color:var(--muted-foreground)]">
+            Paste any class/event URL — we'll re-scrape it weekly and post any
+            newly-available date to your{" "}
+            <Link to="/suggestions" className="underline">Suggestions</Link> inbox.
+          </p>
+          <input
+            value={monUrl}
+            onChange={(e) => setMonUrl(e.target.value)}
+            placeholder="https://www.nycakeacademy.com/collections/buttercream-essentials"
+            className="w-full rounded-full bg-white px-4 py-2.5 text-sm outline-none ring-1 ring-[color:var(--border)]"
+          />
+          <input
+            value={monHint}
+            onChange={(e) => setMonHint(e.target.value)}
+            placeholder='Focus hint (optional) — e.g. "Buttercream Essentials 3"'
+            className="w-full rounded-full bg-white px-4 py-2.5 text-sm outline-none ring-1 ring-[color:var(--border)]"
+          />
+          {monErr && <p className="text-xs text-[color:var(--neon-pink)]">{monErr}</p>}
+          <button
+            onClick={() => addMonMut.mutate()}
+            disabled={!monUrl.trim() || addMonMut.isPending}
+            className="rounded-full bg-[color:var(--cobalt)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[color:var(--cream)] disabled:opacity-50"
+          >
+            {addMonMut.isPending ? "Adding…" : "Monitor weekly"}
+          </button>
+        </section>
+
+        {(monitors as MonitorRow[]).length > 0 && (
+          <section className="space-y-2">
+            <h2 className="px-1 font-display text-xl">Monitored pages</h2>
+            {(monitors as MonitorRow[]).map((m) => {
+              const busy = refreshMonMut.isPending && refreshMonMut.variables === m.id;
+              const seen = Array.isArray(m.last_seen_dates) ? m.last_seen_dates.length : 0;
+              return (
+                <div key={m.id} className="paint-card p-3">
+                  <div className="flex items-start justify-between gap-2">
+                    <div className="min-w-0 flex-1">
+                      <div className="truncate text-sm font-semibold text-[color:var(--ink)]">
+                        {m.title || m.hint || m.url}
+                      </div>
+                      {m.hint && m.title && (
+                        <div className="truncate text-[11px] text-[color:var(--cobalt)]">
+                          focus: {m.hint}
+                        </div>
+                      )}
+                      <div className="truncate text-[11px] text-[color:var(--muted-foreground)]">
+                        {m.last_error
+                          ? `Error: ${m.last_error}`
+                          : m.last_checked_at
+                            ? `Checked ${new Date(m.last_checked_at).toLocaleString()} · ${seen} date${seen === 1 ? "" : "s"} tracked`
+                            : "Never checked"}
+                      </div>
+                    </div>
+                    <div className="flex shrink-0 gap-1">
+                      <button
+                        onClick={() => refreshMonMut.mutate(m.id)}
+                        disabled={busy}
+                        className="rounded-full bg-[color:var(--cobalt)] px-3 py-1 text-[11px] font-bold text-[color:var(--cream)] disabled:opacity-50"
+                      >
+                        {busy ? "…" : "Refresh"}
+                      </button>
+                      <button
+                        onClick={() => removeMonMut.mutate(m.id)}
+                        className="rounded-full border border-[color:var(--border)] bg-white px-3 py-1 text-[11px] font-bold text-[color:var(--ink)]"
+                      >
+                        Remove
+                      </button>
+                    </div>
+                  </div>
+                </div>
+              );
+            })}
+          </section>
+        )}
       </main>
     </AppShell>
   );
