@@ -24,12 +24,13 @@ export function AppShell({ children }: { children: ReactNode }) {
             // insert the Add (+) action between Calendar (i=1) and Chat (i=2)
             const showAddBefore = i === 2;
             return (
-              <div key={t.to} className="flex flex-1 justify-center">
+              <>
                 {showAddBefore && (
                   <Link
+                    key="__add"
                     to="/add"
                     aria-label="Add activity"
-                    className="mx-1 flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl font-light text-[color:var(--cream)] shadow-[0_8px_18px_-6px_rgba(255,61,165,0.55)] ring-2 ring-[color:var(--cream)] transition active:scale-95"
+                    className="flex h-11 w-11 shrink-0 items-center justify-center rounded-full text-2xl font-light text-[color:var(--cream)] shadow-[0_8px_18px_-6px_rgba(255,61,165,0.55)] ring-2 ring-[color:var(--cream)] transition active:scale-95"
                     style={{
                       background:
                         "radial-gradient(circle at 30% 30%, #FF7DC4 0%, var(--neon-pink) 60%, #C81E7E 100%)",
@@ -38,6 +39,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                     +
                   </Link>
                 )}
+              <div key={t.to} className="flex flex-1 justify-center">
                 <Link
                   to={t.to}
                   className={
@@ -57,6 +59,7 @@ export function AppShell({ children }: { children: ReactNode }) {
                   )}
                 </Link>
               </div>
+              </>
             );
           })}
         </div>
