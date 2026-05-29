@@ -32,8 +32,11 @@ export type Database = {
           status: string
           tags: string[]
           title: string
+          travel_from_home: Json | null
           updated_at: string
           venue: string
+          venue_lat: number | null
+          venue_lng: number | null
         }
         Insert: {
           borough?: string
@@ -52,8 +55,11 @@ export type Database = {
           status?: string
           tags?: string[]
           title: string
+          travel_from_home?: Json | null
           updated_at?: string
           venue?: string
+          venue_lat?: number | null
+          venue_lng?: number | null
         }
         Update: {
           borough?: string
@@ -72,8 +78,11 @@ export type Database = {
           status?: string
           tags?: string[]
           title?: string
+          travel_from_home?: Json | null
           updated_at?: string
           venue?: string
+          venue_lat?: number | null
+          venue_lng?: number | null
         }
         Relationships: []
       }
@@ -193,6 +202,33 @@ export type Database = {
           created_at?: string
           payload?: Json
           url?: string
+        }
+        Relationships: []
+      }
+      user_profile: {
+        Row: {
+          created_at: string
+          home_address: string
+          home_lat: number | null
+          home_lng: number | null
+          id: string
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          home_address?: string
+          home_lat?: number | null
+          home_lng?: number | null
+          id?: string
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          home_address?: string
+          home_lat?: number | null
+          home_lng?: number | null
+          id?: string
+          updated_at?: string
         }
         Relationships: []
       }
