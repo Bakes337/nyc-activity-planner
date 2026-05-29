@@ -1,7 +1,7 @@
 import { createFileRoute, Link, useRouter } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { useMemo } from "react";
+import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import {
   CATEGORY_META,
@@ -38,6 +38,7 @@ function ActivityDetailPage() {
   const fetchList = useServerFn(listActivities);
   const del = useServerFn(deleteActivity);
   const fetchTravel = useServerFn(getActivityTravel);
+  const [confirmingDelete, setConfirmingDelete] = useState(false);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
@@ -230,15 +231,37 @@ function ActivityDetailPage() {
               Open source ↗
             </a>
           )}
-          <button
-            onClick={() => {
-              if (confirm("Delete this activity?")) deleteMut.mutate();
-            }}
-            disabled={deleteMut.isPending}
-            className="rounded-full border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-semibold text-[color:var(--ink)] disabled:opacity-60"
-          >
-            {deleteMut.isPending ? "Deleting…" : "Delete"}
-          </button>
+          {confirmingDelete ? (
+            <div className="flex flex-col gap-2 rounded-2xl border border-[color:var(--border)] bg-white/80 p-3">
+              <p className="text-sm font-semibold text-[color:var(--ink)]">
+                Delete this activity? This can't be undone.
+              </p>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => deleteMut.mutate()}
+                  disabled={deleteMut.isPending}
+                  className="flex-1 rounded-full bg-[color:var(--neon-pink)] px-4 py-2 text-sm font-semibold text-white disabled:opacity-60"
+                >
+                  {deleteMut.isPending ? "Deleting…" : "Yes, delete"}
+                </button>
+                <button
+                  onClick={() => setConfirmingDelete(false)}
+                  disabled={deleteMut.isPending}
+                  className="flex-1 rounded-full border border-[color:var(--border)] px-4 py-2 text-sm font-semibold text-[color:var(--ink)]"
+                >
+                  Cancel
+                </button>
+              </div>
+            </div>
+          ) : (
+            <button
+              onClick={() => setConfirmingDelete(true)}
+              disabled={deleteMut.isPending}
+              className="rounded-full border border-[color:var(--border)] bg-white/80 px-4 py-2 text-sm font-semibold text-[color:var(--ink)] disabled:opacity-60"
+            >
+              Delete
+            </button>
+          )}
         </div>
       </div>
     </AppShell>
