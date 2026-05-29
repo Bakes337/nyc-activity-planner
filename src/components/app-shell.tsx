@@ -1,11 +1,12 @@
 import { Link, useRouterState } from "@tanstack/react-router";
 import { Fragment, type ReactNode } from "react";
+import { BookOpen, Calendar, MessageCircle, Music } from "lucide-react";
 
 const TABS = [
-  { to: "/", label: "Library", icon: "▦" },
-  { to: "/calendar", label: "Calendar", icon: "▤" },
-  { to: "/chat", label: "Chat", icon: "✺" },
-  { to: "/playlists", label: "Playlists", icon: "♪" },
+  { to: "/", label: "Library", Icon: BookOpen },
+  { to: "/calendar", label: "Calendar", Icon: Calendar },
+  { to: "/chat", label: "Chat", Icon: MessageCircle },
+  { to: "/playlists", label: "Playlists", Icon: Music },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {
