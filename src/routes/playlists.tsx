@@ -84,7 +84,7 @@ function PlaylistsPage() {
     <AppShell>
       <PageHeader
         eyebrow="Spotify"
-        title="Concerts"
+        title="Music"
         subtitle="Auto playlist of artists with NYC shows in the next 6 months."
       />
       <main className="space-y-3 px-5 pb-6">
