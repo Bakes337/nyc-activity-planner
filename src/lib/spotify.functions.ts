@@ -1,11 +1,4 @@
 import { createServerFn } from "@tanstack/react-start";
-import { getRequestHost, getRequestHeader } from "@tanstack/react-start/server";
-
-function getOrigin(): string {
-  const host = getRequestHost();
-  const proto = getRequestHeader("x-forwarded-proto") || "https";
-  return `${proto}://${host}`;
-}
 
 export const getSpotifyStatus = createServerFn({ method: "GET" }).handler(async () => {
   const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
@@ -39,8 +32,11 @@ export const getSpotifyStatus = createServerFn({ method: "GET" }).handler(async 
 
 export const getSpotifyAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
   const { SPOTIFY_SCOPES, getSpotifyEnv, getRedirectUri } = await import("@/lib/spotify.server");
+  const { getRequestHost, getRequestHeader } = await import("@tanstack/react-start/server");
   const { clientId } = getSpotifyEnv();
-  const origin = getOrigin();
+  const host = getRequestHost();
+  const proto = getRequestHeader("x-forwarded-proto") || "https";
+  const origin = `${proto}://${host}`;
   const redirectUri = getRedirectUri(origin);
   const state = crypto.randomUUID();
   const params = new URLSearchParams({
