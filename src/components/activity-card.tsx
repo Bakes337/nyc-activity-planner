@@ -8,6 +8,7 @@ import {
   nextDate,
   seedGradient,
 } from "../lib/data";
+import { ActivityIllustration } from "./activity-illustration";
 
 export function ActivityCard({ a }: { a: Activity }) {
   const meta = categoryMeta(a.category);
@@ -24,26 +25,7 @@ export function ActivityCard({ a }: { a: Activity }) {
         className="relative aspect-[16/10] w-full"
         style={{ background: seedGradient(a.imageSeed) }}
       >
-        {/* painted abstract shapes */}
-        <svg
-          aria-hidden
-          viewBox="0 0 200 120"
-          preserveAspectRatio="none"
-          className="absolute inset-0 h-full w-full opacity-90"
-        >
-          <path
-            d="M0,80 C 40,40 80,110 120,70 S 200,60 200,90 L200,120 L0,120 Z"
-            fill="rgba(255,255,255,0.18)"
-          />
-          <circle cx="160" cy="32" r="22" fill="rgba(255,255,255,0.22)" />
-          <path
-            d="M10,30 C 50,10 90,50 130,20"
-            stroke="rgba(255,255,255,0.55)"
-            strokeWidth="3"
-            strokeLinecap="round"
-            fill="none"
-          />
-        </svg>
+        <ActivityIllustration activity={a} />
 
         <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-[color:var(--cream)]/95 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--ink)] shadow-sm">
           <span
