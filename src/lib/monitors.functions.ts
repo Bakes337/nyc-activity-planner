@@ -175,7 +175,9 @@ export const refreshMonitoredUrl = createServerFn({ method: "POST" })
     return refreshOneMonitor(row);
   });
 
-export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handler(async () => {
+// Internal impl — callable from trusted server-side code (e.g. the cron route)
+// WITHOUT going through the auth-protected serverFn RPC layer.
+export async function refreshAllMonitoredUrlsImpl() {
   const { data: rows, error } = await supabaseAdmin
     .from("monitored_urls")
     .select("id, url, hint, title, last_seen_dates");
@@ -187,7 +189,11 @@ export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handle
     results.push(await refreshOneMonitor(r));
   }
   return { count: results.length, results };
-});
+}
+
+export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handler(
+  async () => refreshAllMonitoredUrlsImpl(),
+);
 
 export const listMonitorSuggestions = createServerFn({ method: "GET" }).handler(async () => {
   const nowIso = new Date().toISOString();
