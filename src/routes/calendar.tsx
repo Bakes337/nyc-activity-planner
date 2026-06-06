@@ -9,6 +9,7 @@ import {
   formatTime,
   type Activity,
   type ActivityDate,
+  isPassedOneTime,
 } from "../lib/data";
 import { listActivities } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
@@ -39,7 +40,10 @@ function CalendarPage() {
     queryFn: () => fetchList(),
   });
   const activities = useMemo(
-    () => (rows as ActivityRow[]).map(rowToActivity),
+    () =>
+      (rows as ActivityRow[])
+        .map(rowToActivity)
+        .filter((a) => !isPassedOneTime(a)),
     [rows],
   );
 

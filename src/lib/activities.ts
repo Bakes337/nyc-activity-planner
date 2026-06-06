@@ -20,6 +20,8 @@ export interface ActivityRow {
   duration_minutes: number | null;
   created_at: string;
   updated_at: string;
+  is_monitored?: boolean | null;
+  last_monitored_at?: string | null;
 }
 
 export function rowToActivity(r: ActivityRow): Activity {
@@ -41,5 +43,7 @@ export function rowToActivity(r: ActivityRow): Activity {
     tags: r.tags ?? [],
     dates: datesArr,
     durationMinutes: r.duration_minutes ?? undefined,
+    isMonitored: r.is_monitored ?? false,
+    lastMonitoredAt: r.last_monitored_at ?? undefined,
   };
 }

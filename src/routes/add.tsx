@@ -39,6 +39,7 @@ interface Draft {
   sourceUrl: string;
   dates: DraftDate[];
   durationHours: string;
+  isMonitored: boolean;
 }
 
 function fromParsed(p: ParsedActivity): Draft {
@@ -60,6 +61,9 @@ function fromParsed(p: ParsedActivity): Draft {
         ? // 210 -> "3.5", 60 -> "1", 90 -> "1.5"
           String(Math.round((p.durationMinutes / 60) * 4) / 4)
         : "",
+    // Default monitoring ON for recurring classes/series — they're the cases
+    // where new dates trickle in. One-off events default to OFF.
+    isMonitored: p.kind === "recurring",
   };
 }
 
@@ -78,6 +82,7 @@ function emptyDraft(): Draft {
     sourceUrl: "",
     dates: [],
     durationHours: "",
+    isMonitored: false,
   };
 }
 
@@ -157,6 +162,7 @@ function AddPage() {
             if (!Number.isFinite(h) || h <= 0) return null;
             return Math.round(h * 60);
           })(),
+          isMonitored: draft.isMonitored && !!draft.sourceUrl.trim(),
         },
       });
       navigate({ to: "/" });
@@ -475,6 +481,26 @@ function DraftForm({
             className={inputCls}
           />
         </Field>
+        {draft.sourceUrl.trim() && (
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-[color:var(--cobalt)]/8 p-2.5 text-xs">
+            <input
+              type="checkbox"
+              checked={draft.isMonitored}
+              onChange={(e) => set("isMonitored", e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[color:var(--cobalt)]"
+            />
+            <span className="flex-1">
+              <span className="font-bold text-[color:var(--ink)]">
+                Monitor this page for new dates
+              </span>
+              <span className="block text-[color:var(--muted-foreground)]">
+                Re-scrapes the source URL weekly and adds any newly-listed
+                dates. Best for recurring classes / class series. Leave off for
+                one-off events like a single concert.
+              </span>
+            </span>
+          </label>
+        )}
       </div>
 
       <div className="flex gap-2">
