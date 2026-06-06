@@ -356,6 +356,18 @@ function safeIso(s: unknown): string | null {
   return new Date(t).toISOString();
 }
 
+/**
+ * Fix common brand-name smushes that LLMs copy verbatim from <title> tags.
+ * Inserts a space between "NY" and the next capitalized word (e.g. "NYCake" -> "NY Cake")
+ * and collapses any accidental double spaces.
+ */
+function normalizeTitle(s: string): string {
+  return s
+    .replace(/\bNY([A-Z][a-z])/g, "NY $1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export const parseActivityUrl = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
@@ -437,6 +449,11 @@ ${
 IMPORTANT title rules:
 - Prefer the activity/event name (usually the H1 inside the booking widget or main content) over the site's <title> tag, which is often just the studio/venue brand.
 - Do not append the venue name to the title.
+- Normalize spacing in venue / brand names that smush words together (e.g. "NYCake" -> "NY Cake", "BAMcafé" -> "BAM Café"). Always insert a space between "NY" and the next capitalized word.
+
+IMPORTANT neighborhood rules:
+- "neighborhood" is REQUIRED and must NEVER be empty or null. Infer the most specific NYC neighborhood from the venue's address (e.g. "Chelsea", "Williamsburg", "Long Island City").
+- If you truly cannot determine a neighborhood, fall back to the borough name (e.g. "Manhattan") — but never leave it empty.
 ${peekData?.title ? `- The authoritative title is: "${peekData.title}". Use it verbatim.` : ""}
 ${peekData?.dates && peekData.dates.length ? `- The authoritative dates list is provided below — copy it into the "dates" field verbatim, do NOT invent or filter.` : ""}
 
@@ -537,12 +554,17 @@ ${markdown.slice(0, 8000)}`;
 
     const payload: ParsedActivity = {
       title:
-        peekData?.title?.trim() ||
-        (typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "") ||
-        pageTitle ||
-        "Untitled",
+        normalizeTitle(
+          peekData?.title?.trim() ||
+            (typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "") ||
+            pageTitle ||
+            "Untitled",
+        ),
       venue: typeof raw.venue === "string" ? raw.venue : "",
-      neighborhood: typeof raw.neighborhood === "string" ? raw.neighborhood : "",
+      neighborhood:
+        typeof raw.neighborhood === "string" && raw.neighborhood.trim()
+          ? raw.neighborhood.trim()
+          : coerce(BOROUGHS, raw.borough, "Manhattan"),
       borough: coerce(BOROUGHS, raw.borough, "Manhattan"),
       category: coerce(CATEGORIES, raw.category, "music"),
       priceTier: coerce(PRICE_TIERS, raw.priceTier, "$$"),
