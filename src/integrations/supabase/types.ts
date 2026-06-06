@@ -23,7 +23,9 @@ export type Database = {
           duration_minutes: number | null
           id: string
           image_seed: string
+          is_monitored: boolean
           kind: string
+          last_monitored_at: string | null
           neighborhood: string
           notes: string | null
           price_note: string | null
@@ -46,7 +48,9 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           image_seed?: string
+          is_monitored?: boolean
           kind?: string
+          last_monitored_at?: string | null
           neighborhood?: string
           notes?: string | null
           price_note?: string | null
@@ -69,7 +73,9 @@ export type Database = {
           duration_minutes?: number | null
           id?: string
           image_seed?: string
+          is_monitored?: boolean
           kind?: string
+          last_monitored_at?: string | null
           neighborhood?: string
           notes?: string | null
           price_note?: string | null
