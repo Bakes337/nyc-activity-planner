@@ -56,7 +56,7 @@ export const CATEGORY_META: Record<
   culture: { label: "Culture", color: "var(--forest)", emoji: "▲" },
   crafts: { label: "Crafts", color: "var(--tiffany)", emoji: "✿" },
   active: { label: "Active", color: "var(--teal)", emoji: "❋" },
-  theater: { label: "Theater", color: "#6B1422", emoji: "★" },
+  theater: { label: "Theater", color: "#6D28D9", emoji: "★" },
   film: { label: "Film", color: "var(--neon-coral)", emoji: "●" },
 };
 
@@ -413,7 +413,7 @@ export function seedGradient(seed: string) {
     ["#0F4D2E", "#5EFFB1", "#FBF5E3"],
     ["#0E8C7D", "#7FD8D4", "#1E3A8A"],
     ["#FF3DA5", "#1E3A8A", "#5EFFB1"],
-    ["#6B1422", "#FF5C5C", "#FBF5E3"],
+    ["#6D28D9", "#D946EF", "#FBF5E3"],
     ["#0B2C7A", "#0E8C7D", "#5EFFB1"],
   ];
   const p = palettes[h % palettes.length];
