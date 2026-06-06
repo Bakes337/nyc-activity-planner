@@ -542,10 +542,12 @@ ${markdown.slice(0, 8000)}`;
 
     const payload: ParsedActivity = {
       title:
-        peekData?.title?.trim() ||
-        (typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "") ||
-        pageTitle ||
-        "Untitled",
+        normalizeTitle(
+          peekData?.title?.trim() ||
+            (typeof raw.title === "string" && raw.title.trim() ? raw.title.trim() : "") ||
+            pageTitle ||
+            "Untitled",
+        ),
       venue: typeof raw.venue === "string" ? raw.venue : "",
       neighborhood:
         typeof raw.neighborhood === "string" && raw.neighborhood.trim()
