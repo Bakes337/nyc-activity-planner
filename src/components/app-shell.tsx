@@ -14,11 +14,11 @@ export function AppShell({ children }: { children: ReactNode }) {
   const path = location.pathname;
 
   return (
-    <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col pb-28 sm:max-w-3xl md:max-w-4xl lg:max-w-6xl">
+    <div className="mx-auto flex min-h-screen w-full max-w-[440px] flex-col pb-28 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
       {children}
 
       {/* Bottom tab bar */}
-      <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[440px] px-3 pb-3 sm:max-w-3xl md:max-w-4xl lg:max-w-6xl">
+      <nav className="fixed inset-x-0 bottom-0 z-20 mx-auto w-full max-w-[440px] px-3 pb-3 sm:max-w-2xl md:max-w-3xl lg:max-w-4xl">
         <div className="paint-card relative flex items-center justify-around gap-1 px-2 py-2">
           {TABS.map((t, i) => {
             const active = path === t.to || (t.to === "/" && path === "/");
