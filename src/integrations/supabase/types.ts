@@ -288,6 +288,75 @@ export type Database = {
         }
         Relationships: []
       }
+      spotify_connection: {
+        Row: {
+          access_token: string
+          created_at: string
+          display_name: string
+          expires_at: string
+          id: string
+          refresh_token: string
+          scope: string
+          spotify_user_id: string
+          updated_at: string
+        }
+        Insert: {
+          access_token: string
+          created_at?: string
+          display_name?: string
+          expires_at: string
+          id?: string
+          refresh_token: string
+          scope?: string
+          spotify_user_id: string
+          updated_at?: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          display_name?: string
+          expires_at?: string
+          id?: string
+          refresh_token?: string
+          scope?: string
+          spotify_user_id?: string
+          updated_at?: string
+        }
+        Relationships: []
+      }
+      spotify_playlist: {
+        Row: {
+          created_at: string
+          id: string
+          last_refreshed_at: string | null
+          name: string
+          spotify_playlist_id: string
+          total_minutes: number
+          track_count: number
+          updated_at: string
+        }
+        Insert: {
+          created_at?: string
+          id?: string
+          last_refreshed_at?: string | null
+          name?: string
+          spotify_playlist_id: string
+          total_minutes?: number
+          track_count?: number
+          updated_at?: string
+        }
+        Update: {
+          created_at?: string
+          id?: string
+          last_refreshed_at?: string | null
+          name?: string
+          spotify_playlist_id?: string
+          total_minutes?: number
+          track_count?: number
+          updated_at?: string
+        }
+        Relationships: []
+      }
       user_profile: {
         Row: {
           created_at: string
