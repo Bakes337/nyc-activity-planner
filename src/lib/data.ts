@@ -42,6 +42,8 @@ export interface Activity {
   dates: ActivityDate[];
   kind: "one_time" | "recurring" | "timeless";
   durationMinutes?: number;
+  isMonitored?: boolean;
+  lastMonitoredAt?: string;
 }
 
 export const CATEGORY_META: Record<
