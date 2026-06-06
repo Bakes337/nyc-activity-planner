@@ -481,6 +481,26 @@ function DraftForm({
             className={inputCls}
           />
         </Field>
+        {draft.sourceUrl.trim() && (
+          <label className="flex cursor-pointer items-start gap-2 rounded-xl bg-[color:var(--cobalt)]/8 p-2.5 text-xs">
+            <input
+              type="checkbox"
+              checked={draft.isMonitored}
+              onChange={(e) => set("isMonitored", e.target.checked)}
+              className="mt-0.5 h-4 w-4 shrink-0 accent-[color:var(--cobalt)]"
+            />
+            <span className="flex-1">
+              <span className="font-bold text-[color:var(--ink)]">
+                Monitor this page for new dates
+              </span>
+              <span className="block text-[color:var(--muted-foreground)]">
+                Re-scrapes the source URL weekly and adds any newly-listed
+                dates. Best for recurring classes / class series. Leave off for
+                one-off events like a single concert.
+              </span>
+            </span>
+          </label>
+        )}
       </div>
 
       <div className="flex gap-2">
