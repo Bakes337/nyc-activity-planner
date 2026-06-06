@@ -679,3 +679,52 @@ export const deleteActivity = createServerFn({ method: "POST" })
     if (error) throw new Error(error.message);
     return { ok: true };
   });
+
+export const refreshActivityDates = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const { data: row, error } = await supabaseAdmin
+      .from("activities")
+      .select("id, title, source_url, dates")
+      .eq("id", data.id)
+      .single();
+    if (error || !row) throw new Error(error?.message ?? "Activity not found");
+    if (!row.source_url) throw new Error("No source URL on this activity — can't refresh dates.");
+
+    // Bust every cached parse for this URL (any hint, any parser version),
+    // so we always fetch a fresh calendar.
+    await supabaseAdmin
+      .from("scrape_cache")
+      .delete()
+      .like("url", `${row.source_url}%`);
+
+    const parsed = await parseActivityUrl({
+      data: { url: row.source_url, hint: row.title },
+    });
+
+    // Preserve existing date IDs + sold-out flags where the start time matches,
+    // so notes/links keyed off the existing IDs stay stable.
+    const existing = Array.isArray(row.dates) ? (row.dates as Array<{ id?: string; startsAt?: string; isSoldOut?: boolean }>) : [];
+    const byStart = new Map(existing.map((d) => [d.startsAt, d]));
+    const mergedDates = parsed.dates.map((d, i) => {
+      const prev = byStart.get(d.startsAt);
+      return {
+        id: prev?.id ?? `d${i}-${Math.random().toString(36).slice(2, 8)}`,
+        startsAt: d.startsAt,
+        endsAt: d.endsAt ?? undefined,
+        isSoldOut: prev?.isSoldOut ?? false,
+      };
+    });
+
+    const { error: updErr } = await supabaseAdmin
+      .from("activities")
+      .update({
+        dates: mergedDates,
+        kind: mergedDates.length > 1 ? "recurring" : mergedDates.length === 1 ? "one_time" : "timeless",
+        updated_at: new Date().toISOString(),
+      })
+      .eq("id", row.id);
+    if (updErr) throw new Error(updErr.message);
+
+    return { ok: true, count: mergedDates.length };
+  });
