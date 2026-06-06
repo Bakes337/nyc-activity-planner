@@ -391,6 +391,19 @@ export function nextDate(a: Activity): ActivityDate | undefined {
     )[0];
 }
 
+/**
+ * One-off events disappear from the library/calendar after their single date
+ * has passed (with a 2-hour grace window). Recurring / timeless / monitored
+ * activities are kept so future dates can keep flowing in.
+ */
+export function isPassedOneTime(a: Activity): boolean {
+  if (a.kind !== "one_time") return false;
+  if (a.isMonitored) return false;
+  if (a.dates.length === 0) return false;
+  const cutoff = Date.now() - 2 * 60 * 60 * 1000;
+  return a.dates.every((d) => new Date(d.startsAt).getTime() < cutoff);
+}
+
 /** A painterly gradient generated from a string seed — used as the card hero. */
 export function seedGradient(seed: string) {
   let h = 0;
