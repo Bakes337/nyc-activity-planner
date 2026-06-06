@@ -437,6 +437,11 @@ ${
 IMPORTANT title rules:
 - Prefer the activity/event name (usually the H1 inside the booking widget or main content) over the site's <title> tag, which is often just the studio/venue brand.
 - Do not append the venue name to the title.
+- Normalize spacing in venue / brand names that smush words together (e.g. "NYCake" -> "NY Cake", "BAMcafé" -> "BAM Café"). Always insert a space between "NY" and the next capitalized word.
+
+IMPORTANT neighborhood rules:
+- "neighborhood" is REQUIRED and must NEVER be empty or null. Infer the most specific NYC neighborhood from the venue's address (e.g. "Chelsea", "Williamsburg", "Long Island City").
+- If you truly cannot determine a neighborhood, fall back to the borough name (e.g. "Manhattan") — but never leave it empty.
 ${peekData?.title ? `- The authoritative title is: "${peekData.title}". Use it verbatim.` : ""}
 ${peekData?.dates && peekData.dates.length ? `- The authoritative dates list is provided below — copy it into the "dates" field verbatim, do NOT invent or filter.` : ""}
 
