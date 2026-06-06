@@ -560,7 +560,7 @@ ${markdown.slice(0, 8000)}`;
             pageTitle ||
             "Untitled",
         ),
-      venue: typeof raw.venue === "string" ? raw.venue : "",
+      venue: typeof raw.venue === "string" ? normalizeTitle(raw.venue) : "",
       neighborhood:
         typeof raw.neighborhood === "string" && raw.neighborhood.trim()
           ? raw.neighborhood.trim()
