@@ -96,40 +96,6 @@ function SettingsPage() {
   });
 
   // Monitored URLs
-  const listMonitors = useServerFn(listMonitoredUrls);
-  const addMonitor = useServerFn(addMonitoredUrl);
-  const refreshMon = useServerFn(refreshMonitoredUrl);
-  const removeMon = useServerFn(removeMonitoredUrl);
-  const { data: monitors = [] } = useQuery({
-    queryKey: ["monitors"],
-    queryFn: () => listMonitors(),
-  });
-  const [monUrl, setMonUrl] = useState("");
-  const [monHint, setMonHint] = useState("");
-  const [monErr, setMonErr] = useState<string | null>(null);
-  const addMonMut = useMutation({
-    mutationFn: () => addMonitor({ data: { url: monUrl, hint: monHint || undefined } }),
-    onSuccess: () => {
-      setMonUrl("");
-      setMonHint("");
-      setMonErr(null);
-      qc.invalidateQueries({ queryKey: ["monitors"] });
-      qc.invalidateQueries({ queryKey: ["suggestions"] });
-    },
-    onError: (e) => setMonErr(e instanceof Error ? e.message : String(e)),
-  });
-  const refreshMonMut = useMutation({
-    mutationFn: (id: string) => refreshMon({ data: { id } }),
-    onSuccess: () => {
-      qc.invalidateQueries({ queryKey: ["monitors"] });
-      qc.invalidateQueries({ queryKey: ["suggestions"] });
-    },
-  });
-  const removeMonMut = useMutation({
-    mutationFn: (id: string) => removeMon({ data: { id } }),
-    onSuccess: () => qc.invalidateQueries({ queryKey: ["monitors"] }),
-  });
-
   function toggleBorough(b: Borough) {
     const next = new Set(boroughs);
     if (next.has(b)) next.delete(b);
