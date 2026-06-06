@@ -39,6 +39,7 @@ interface Draft {
   sourceUrl: string;
   dates: DraftDate[];
   durationHours: string;
+  isMonitored: boolean;
 }
 
 function fromParsed(p: ParsedActivity): Draft {
@@ -60,6 +61,9 @@ function fromParsed(p: ParsedActivity): Draft {
         ? // 210 -> "3.5", 60 -> "1", 90 -> "1.5"
           String(Math.round((p.durationMinutes / 60) * 4) / 4)
         : "",
+    // Default monitoring ON for recurring classes/series — they're the cases
+    // where new dates trickle in. One-off events default to OFF.
+    isMonitored: p.kind === "recurring",
   };
 }
 
@@ -78,6 +82,7 @@ function emptyDraft(): Draft {
     sourceUrl: "",
     dates: [],
     durationHours: "",
+    isMonitored: false,
   };
 }
 
@@ -157,6 +162,7 @@ function AddPage() {
             if (!Number.isFinite(h) || h <= 0) return null;
             return Math.round(h * 60);
           })(),
+          isMonitored: draft.isMonitored && !!draft.sourceUrl.trim(),
         },
       });
       navigate({ to: "/" });
