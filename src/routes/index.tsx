@@ -10,6 +10,7 @@ import {
   type Category,
   type PriceTier,
   nextDate,
+  isPassedOneTime,
 } from "../lib/data";
 import { listActivities } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
@@ -75,7 +76,10 @@ function Index() {
   });
   const suggestionCount = (suggestionRows as unknown[]).length;
   const activities = useMemo(
-    () => (rows as ActivityRow[]).map(rowToActivity),
+    () =>
+      (rows as ActivityRow[])
+        .map(rowToActivity)
+        .filter((a) => !isPassedOneTime(a)),
     [rows],
   );
 
