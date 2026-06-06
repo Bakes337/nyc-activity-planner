@@ -623,6 +623,7 @@ const SaveInput = z.object({
   tags: z.array(z.string().max(40)).max(12).default([]),
   dates: z.array(DateInput).max(20).default([]),
   durationMinutes: z.number().int().min(1).max(60 * 24 * 14).nullable().optional(),
+  isMonitored: z.boolean().optional().default(false),
 });
 
 export const createActivity = createServerFn({ method: "POST" })
@@ -647,6 +648,7 @@ export const createActivity = createServerFn({ method: "POST" })
       notes: data.notes ?? null,
       tags: data.tags,
       duration_minutes: data.durationMinutes ?? null,
+      is_monitored: data.isMonitored ?? false,
       dates: data.dates.map((d, i) => ({
         id: `d${i}-${Math.random().toString(36).slice(2, 8)}`,
         startsAt: d.startsAt,
