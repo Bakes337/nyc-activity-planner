@@ -17,6 +17,7 @@ import { Route as CalendarRouteImport } from './routes/calendar'
 import { Route as AddRouteImport } from './routes/add'
 import { Route as IndexRouteImport } from './routes/index'
 import { Route as ActivitiesIdRouteImport } from './routes/activities.$id'
+import { Route as ApiSpotifyCallbackRouteImport } from './routes/api/spotify.callback'
 import { Route as ApiPublicCronRefreshOrganizersRouteImport } from './routes/api/public/cron.refresh-organizers'
 import { Route as ApiPublicCronRefreshMonitorsRouteImport } from './routes/api/public/cron.refresh-monitors'
 
@@ -60,6 +61,11 @@ const ActivitiesIdRoute = ActivitiesIdRouteImport.update({
   path: '/activities/$id',
   getParentRoute: () => rootRouteImport,
 } as any)
+const ApiSpotifyCallbackRoute = ApiSpotifyCallbackRouteImport.update({
+  id: '/api/spotify/callback',
+  path: '/api/spotify/callback',
+  getParentRoute: () => rootRouteImport,
+} as any)
 const ApiPublicCronRefreshOrganizersRoute =
   ApiPublicCronRefreshOrganizersRouteImport.update({
     id: '/api/public/cron/refresh-organizers',
@@ -82,6 +88,7 @@ export interface FileRoutesByFullPath {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
@@ -94,6 +101,7 @@ export interface FileRoutesByTo {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
@@ -107,6 +115,7 @@ export interface FileRoutesById {
   '/settings': typeof SettingsRoute
   '/suggestions': typeof SuggestionsRoute
   '/activities/$id': typeof ActivitiesIdRoute
+  '/api/spotify/callback': typeof ApiSpotifyCallbackRoute
   '/api/public/cron/refresh-monitors': typeof ApiPublicCronRefreshMonitorsRoute
   '/api/public/cron/refresh-organizers': typeof ApiPublicCronRefreshOrganizersRoute
 }
@@ -121,6 +130,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/spotify/callback'
     | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   fileRoutesByTo: FileRoutesByTo
@@ -133,6 +143,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/spotify/callback'
     | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   id:
@@ -145,6 +156,7 @@ export interface FileRouteTypes {
     | '/settings'
     | '/suggestions'
     | '/activities/$id'
+    | '/api/spotify/callback'
     | '/api/public/cron/refresh-monitors'
     | '/api/public/cron/refresh-organizers'
   fileRoutesById: FileRoutesById
@@ -158,6 +170,7 @@ export interface RootRouteChildren {
   SettingsRoute: typeof SettingsRoute
   SuggestionsRoute: typeof SuggestionsRoute
   ActivitiesIdRoute: typeof ActivitiesIdRoute
+  ApiSpotifyCallbackRoute: typeof ApiSpotifyCallbackRoute
   ApiPublicCronRefreshMonitorsRoute: typeof ApiPublicCronRefreshMonitorsRoute
   ApiPublicCronRefreshOrganizersRoute: typeof ApiPublicCronRefreshOrganizersRoute
 }
@@ -220,6 +233,13 @@ declare module '@tanstack/react-router' {
       preLoaderRoute: typeof ActivitiesIdRouteImport
       parentRoute: typeof rootRouteImport
     }
+    '/api/spotify/callback': {
+      id: '/api/spotify/callback'
+      path: '/api/spotify/callback'
+      fullPath: '/api/spotify/callback'
+      preLoaderRoute: typeof ApiSpotifyCallbackRouteImport
+      parentRoute: typeof rootRouteImport
+    }
     '/api/public/cron/refresh-organizers': {
       id: '/api/public/cron/refresh-organizers'
       path: '/api/public/cron/refresh-organizers'
@@ -246,9 +266,20 @@ const rootRouteChildren: RootRouteChildren = {
   SettingsRoute: SettingsRoute,
   SuggestionsRoute: SuggestionsRoute,
   ActivitiesIdRoute: ActivitiesIdRoute,
+  ApiSpotifyCallbackRoute: ApiSpotifyCallbackRoute,
   ApiPublicCronRefreshMonitorsRoute: ApiPublicCronRefreshMonitorsRoute,
   ApiPublicCronRefreshOrganizersRoute: ApiPublicCronRefreshOrganizersRoute,
 }
 export const routeTree = rootRouteImport
   ._addFileChildren(rootRouteChildren)
   ._addFileTypes<FileRouteTypes>()
+
+import type { getRouter } from './router.tsx'
+import type { startInstance } from './start.ts'
+declare module '@tanstack/react-start' {
+  interface Register {
+    ssr: true
+    router: Awaited<ReturnType<typeof getRouter>>
+    config: Awaited<ReturnType<typeof startInstance.getOptions>>
+  }
+}
