@@ -211,7 +211,7 @@ function Index() {
         </div>
       </div>
 
-      <main className="grid grid-cols-1 gap-4 px-5 pb-6 pt-3 sm:grid-cols-2">
+      <main className="grid grid-cols-1 gap-4 px-5 pb-6 pt-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filtered.map((a) => (
           <ActivityCard key={a.id} a={a} />
         ))}
