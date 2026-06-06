@@ -47,7 +47,18 @@ function PlaylistsPage() {
   const connect = useMutation({
     mutationFn: () => authUrlFn(),
     onSuccess: (d) => {
-      if (d?.url) window.location.href = d.url;
+      if (d?.url) {
+        // Break out of the Lovable preview iframe — Spotify refuses to load in iframes.
+        try {
+          if (window.top && window.top !== window.self) {
+            window.top.location.href = d.url;
+            return;
+          }
+        } catch {
+          // Cross-origin top access blocked — fall through to opening a new tab.
+        }
+        window.open(d.url, "_blank", "noopener,noreferrer");
+      }
     },
   });
 
