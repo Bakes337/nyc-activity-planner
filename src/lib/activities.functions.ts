@@ -547,7 +547,10 @@ ${markdown.slice(0, 8000)}`;
         pageTitle ||
         "Untitled",
       venue: typeof raw.venue === "string" ? raw.venue : "",
-      neighborhood: typeof raw.neighborhood === "string" ? raw.neighborhood : "",
+      neighborhood:
+        typeof raw.neighborhood === "string" && raw.neighborhood.trim()
+          ? raw.neighborhood.trim()
+          : coerce(BOROUGHS, raw.borough, "Manhattan"),
       borough: coerce(BOROUGHS, raw.borough, "Manhattan"),
       category: coerce(CATEGORIES, raw.category, "music"),
       priceTier: coerce(PRICE_TIERS, raw.priceTier, "$$"),
