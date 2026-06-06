@@ -724,9 +724,33 @@ export const refreshActivityDates = createServerFn({ method: "POST" })
         dates: mergedDates,
         kind: mergedDates.length > 1 ? "recurring" : mergedDates.length === 1 ? "one_time" : "timeless",
         updated_at: new Date().toISOString(),
+        last_monitored_at: new Date().toISOString(),
       })
       .eq("id", row.id);
     if (updErr) throw new Error(updErr.message);
 
     return { ok: true, count: mergedDates.length };
   });
+
+// Called by the weekly cron — refreshes dates on every activity flagged as monitored.
+export const refreshAllMonitoredActivities = createServerFn({ method: "POST" }).handler(
+  async () => {
+    const { data: rows, error } = await supabaseAdmin
+      .from("activities")
+      .select("id, title")
+      .eq("is_monitored", true);
+    if (error) throw new Error(error.message);
+    const results: { id: string; count?: number; error?: string }[] = [];
+    for (const r of rows ?? []) {
+      try {
+        // eslint-disable-next-line no-await-in-loop
+        const out = await refreshActivityDates({ data: { id: r.id } });
+        results.push({ id: r.id, count: out.count });
+      } catch (e) {
+        const msg = e instanceof Error ? e.message : String(e);
+        results.push({ id: r.id, error: msg });
+      }
+    }
+    return { count: results.length, results };
+  },
+);
