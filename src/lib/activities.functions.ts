@@ -356,6 +356,18 @@ function safeIso(s: unknown): string | null {
   return new Date(t).toISOString();
 }
 
+/**
+ * Fix common brand-name smushes that LLMs copy verbatim from <title> tags.
+ * Inserts a space between "NY" and the next capitalized word (e.g. "NYCake" -> "NY Cake")
+ * and collapses any accidental double spaces.
+ */
+function normalizeTitle(s: string): string {
+  return s
+    .replace(/\bNY([A-Z][a-z])/g, "NY $1")
+    .replace(/\s{2,}/g, " ")
+    .trim();
+}
+
 export const parseActivityUrl = createServerFn({ method: "POST" })
   .inputValidator(
     z.object({
