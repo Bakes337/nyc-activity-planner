@@ -199,6 +199,11 @@ function ActivityDetailPage() {
               </button>
             )}
           </div>
+          {activity.isMonitored && (
+            <p className="mt-1 text-[11px] text-[color:var(--cobalt)]">
+              ✓ Monitored — new dates are pulled from the source URL automatically.
+            </p>
+          )}
           {refreshError && (
             <p className="mt-1 text-xs text-[color:var(--neon-pink)]">{refreshError}</p>
           )}
