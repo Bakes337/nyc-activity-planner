@@ -408,7 +408,9 @@ export const refreshOrganizer = createServerFn({ method: "POST" })
     return refreshOne(row);
   });
 
-export const refreshAllOrganizers = createServerFn({ method: "POST" }).handler(async () => {
+// Internal impl — callable from trusted server-side code (e.g. the cron route)
+// WITHOUT going through the auth-protected serverFn RPC layer.
+export async function refreshAllOrganizersImpl() {
   const { data: rows, error } = await supabaseAdmin
     .from("followed_organizers")
     .select("id, url, filters, name");
@@ -420,7 +422,11 @@ export const refreshAllOrganizers = createServerFn({ method: "POST" }).handler(a
     results.push(await refreshOne(r));
   }
   return { count: results.length, results };
-});
+}
+
+export const refreshAllOrganizers = createServerFn({ method: "POST" }).handler(
+  async () => refreshAllOrganizersImpl(),
+);
 
 export const listSuggestions = createServerFn({ method: "GET" }).handler(async () => {
   const nowIso = new Date().toISOString();
