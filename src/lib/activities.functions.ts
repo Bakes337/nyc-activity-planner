@@ -704,13 +704,11 @@ export const deleteActivity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
-export const refreshActivityDates = createServerFn({ method: "POST" })
-  .inputValidator(z.object({ id: z.string().uuid() }))
-  .handler(async ({ data }) => {
-    const { data: row, error } = await supabaseAdmin
+async function refreshActivityDatesImpl(input: { id: string }) {
+  const { data: row, error } = await supabaseAdmin
       .from("activities")
       .select("id, title, source_url, dates")
-      .eq("id", data.id)
+      .eq("id", input.id)
       .single();
     if (error || !row) throw new Error(error?.message ?? "Activity not found");
     if (!row.source_url) throw new Error("No source URL on this activity — can't refresh dates.");
@@ -722,9 +720,7 @@ export const refreshActivityDates = createServerFn({ method: "POST" })
       .delete()
       .like("url", `${row.source_url}%`);
 
-    const parsed = await parseActivityUrl({
-      data: { url: row.source_url, hint: row.title },
-    });
+    const parsed = await parseActivityUrlImpl({ url: row.source_url, hint: row.title });
 
     // Preserve existing date IDs + sold-out flags where the start time matches,
     // so notes/links keyed off the existing IDs stay stable.
@@ -752,27 +748,35 @@ export const refreshActivityDates = createServerFn({ method: "POST" })
     if (updErr) throw new Error(updErr.message);
 
     return { ok: true, count: mergedDates.length };
-  });
+}
+
+export const refreshActivityDates = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => refreshActivityDatesImpl(data));
 
 // Called by the weekly cron — refreshes dates on every activity flagged as monitored.
-export const refreshAllMonitoredActivities = createServerFn({ method: "POST" }).handler(
-  async () => {
-    const { data: rows, error } = await supabaseAdmin
-      .from("activities")
-      .select("id, title")
-      .eq("is_monitored", true);
-    if (error) throw new Error(error.message);
-    const results: { id: string; count?: number; error?: string }[] = [];
-    for (const r of rows ?? []) {
-      try {
-        // eslint-disable-next-line no-await-in-loop
-        const out = await refreshActivityDates({ data: { id: r.id } });
-        results.push({ id: r.id, count: out.count });
-      } catch (e) {
-        const msg = e instanceof Error ? e.message : String(e);
-        results.push({ id: r.id, error: msg });
-      }
+// Internal impl — callable from trusted server-side code (the cron route)
+// WITHOUT going through the auth-protected serverFn RPC layer.
+export async function refreshAllMonitoredActivitiesImpl() {
+  const { data: rows, error } = await supabaseAdmin
+    .from("activities")
+    .select("id, title")
+    .eq("is_monitored", true);
+  if (error) throw new Error(error.message);
+  const results: { id: string; count?: number; error?: string }[] = [];
+  for (const r of rows ?? []) {
+    try {
+      // eslint-disable-next-line no-await-in-loop
+      const out = await refreshActivityDatesImpl({ id: r.id });
+      results.push({ id: r.id, count: out.count });
+    } catch (e) {
+      const msg = e instanceof Error ? e.message : String(e);
+      results.push({ id: r.id, error: msg });
     }
-    return { count: results.length, results };
-  },
+  }
+  return { count: results.length, results };
+}
+
+export const refreshAllMonitoredActivities = createServerFn({ method: "POST" }).handler(
+  async () => refreshAllMonitoredActivitiesImpl(),
 );
