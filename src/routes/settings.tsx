@@ -11,12 +11,6 @@ import {
   updateOrganizerFilters,
 } from "../lib/organizers.functions";
 import { getHomeProfile, saveHomeAddress } from "../lib/location.functions";
-import {
-  addMonitoredUrl,
-  listMonitoredUrls,
-  refreshMonitoredUrl,
-  removeMonitoredUrl,
-} from "../lib/monitors.functions";
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 type Borough = (typeof BOROUGHS)[number];
@@ -28,16 +22,6 @@ type OrgRow = {
   filters: { boroughs?: string[]; hideSoldOut?: boolean } | null;
   last_checked_at: string | null;
   last_error: string | null;
-};
-
-type MonitorRow = {
-  id: string;
-  url: string;
-  hint: string;
-  title: string;
-  last_checked_at: string | null;
-  last_error: string | null;
-  last_seen_dates: unknown;
 };
 
 export const Route = createFileRoute("/settings")({
