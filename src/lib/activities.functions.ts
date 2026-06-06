@@ -368,16 +368,9 @@ function normalizeTitle(s: string): string {
     .trim();
 }
 
-export const parseActivityUrl = createServerFn({ method: "POST" })
-  .inputValidator(
-    z.object({
-      url: z.string().url(),
-      hint: z.string().max(500).optional(),
-    }),
-  )
-  .handler(async ({ data }): Promise<ParsedActivity> => {
-    const url = data.url.trim();
-    const hint = (data.hint ?? "").trim();
+async function parseActivityUrlImpl(input: { url: string; hint?: string }): Promise<ParsedActivity> {
+    const url = input.url.trim();
+    const hint = (input.hint ?? "").trim();
     // bump this when extraction logic changes to invalidate old cached parses
     const PARSER_VERSION = "v4-fh-3months";
     const cacheKey = hint
@@ -593,7 +586,16 @@ ${markdown.slice(0, 8000)}`;
       .upsert({ url: cacheKey, payload: JSON.parse(JSON.stringify(payload)) });
 
     return payload;
-  });
+}
+
+export const parseActivityUrl = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      url: z.string().url(),
+      hint: z.string().max(500).optional(),
+    }),
+  )
+  .handler(async ({ data }): Promise<ParsedActivity> => parseActivityUrlImpl(data));
 
 const DateInput = z.object({
   startsAt: z.string(),
