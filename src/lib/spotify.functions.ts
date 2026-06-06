@@ -33,10 +33,10 @@ export const getSpotifyStatus = createServerFn({ method: "GET" }).handler(async 
 export const getSpotifyAuthUrl = createServerFn({ method: "POST" })
   .inputValidator((input: { origin: string }) => input)
   .handler(async ({ data }) => {
-  const { SPOTIFY_SCOPES, getSpotifyEnv, getRedirectUri } = await import("@/lib/spotify.server");
+  const { SPOTIFY_SCOPES, encodeSpotifyState, getSpotifyEnv, getRedirectUri } = await import("@/lib/spotify.server");
   const { clientId } = getSpotifyEnv();
   const redirectUri = getRedirectUri(data.origin);
-  const state = crypto.randomUUID();
+  const state = encodeSpotifyState(redirectUri);
   const params = new URLSearchParams({
     client_id: clientId,
     response_type: "code",

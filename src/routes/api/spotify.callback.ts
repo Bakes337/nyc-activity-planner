@@ -7,6 +7,7 @@ export const Route = createFileRoute("/api/spotify/callback")({
         const url = new URL(request.url);
         const code = url.searchParams.get("code");
         const error = url.searchParams.get("error");
+        const state = url.searchParams.get("state");
         const origin = `${url.protocol}//${url.host}`;
 
         if (error || !code) {
@@ -14,10 +15,10 @@ export const Route = createFileRoute("/api/spotify/callback")({
         }
 
         try {
-          const { exchangeCodeForToken, getRedirectUri, spotifyFetch } = await import("@/lib/spotify.server");
+          const { exchangeCodeForToken, getRedirectUri, getRedirectUriFromState, spotifyFetch } = await import("@/lib/spotify.server");
           const { supabaseAdmin } = await import("@/integrations/supabase/client.server");
 
-          const redirectUri = getRedirectUri(origin);
+          const redirectUri = getRedirectUriFromState(state) ?? getRedirectUri(origin);
           const token = await exchangeCodeForToken(code, redirectUri);
 
           const me = await spotifyFetch("/me", token.access_token);

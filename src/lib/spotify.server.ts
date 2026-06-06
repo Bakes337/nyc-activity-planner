@@ -26,6 +26,27 @@ export function getRedirectUri(origin: string) {
   return `${origin.replace(/\/$/, "")}/api/spotify/callback`;
 }
 
+export function encodeSpotifyState(redirectUri: string) {
+  return Buffer.from(
+    JSON.stringify({ nonce: crypto.randomUUID(), redirectUri }),
+    "utf8",
+  ).toString("base64url");
+}
+
+export function getRedirectUriFromState(state: string | null) {
+  if (!state) return null;
+  try {
+    const parsed = JSON.parse(Buffer.from(state, "base64url").toString("utf8")) as {
+      redirectUri?: unknown;
+    };
+    return typeof parsed.redirectUri === "string" && parsed.redirectUri.length > 0
+      ? parsed.redirectUri
+      : null;
+  } catch {
+    return null;
+  }
+}
+
 export interface TokenResponse {
   access_token: string;
   refresh_token?: string;
