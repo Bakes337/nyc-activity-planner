@@ -368,7 +368,7 @@ function normalizeTitle(s: string): string {
     .trim();
 }
 
-async function parseActivityUrlImpl(input: { url: string; hint?: string }): Promise<ParsedActivity> {
+export async function parseActivityUrlImpl(input: { url: string; hint?: string }): Promise<ParsedActivity> {
     const url = input.url.trim();
     const hint = (input.hint ?? "").trim();
     // bump this when extraction logic changes to invalidate old cached parses
