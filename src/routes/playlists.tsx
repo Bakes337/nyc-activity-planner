@@ -45,7 +45,7 @@ function PlaylistsPage() {
   });
 
   const connect = useMutation({
-    mutationFn: () => authUrlFn(),
+    mutationFn: () => authUrlFn({ data: { origin: window.location.origin } }),
     onSuccess: (d) => {
       if (d?.url) {
         // Break out of the Lovable preview iframe — Spotify refuses to load in iframes.
