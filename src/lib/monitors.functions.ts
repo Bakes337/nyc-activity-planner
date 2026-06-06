@@ -2,7 +2,7 @@ import { createServerFn } from "@tanstack/react-start";
 import { z } from "zod";
 
 import { supabaseAdmin } from "@/integrations/supabase/client.server";
-import { parseActivityUrl } from "./activities.functions";
+import { parseActivityUrlImpl } from "./activities.functions";
 
 // ---------- helpers ----------
 
@@ -17,7 +17,7 @@ function cacheKeyFor(url: string, hint: string) {
 
 async function freshParse(url: string, hint: string) {
   await supabaseAdmin.from("scrape_cache").delete().eq("url", cacheKeyFor(url, hint));
-  return parseActivityUrl({ data: { url, hint: hint || undefined } });
+  return parseActivityUrlImpl({ url, hint: hint || undefined });
 }
 
 function normalizeDates(input: unknown): string[] {
@@ -175,7 +175,9 @@ export const refreshMonitoredUrl = createServerFn({ method: "POST" })
     return refreshOneMonitor(row);
   });
 
-export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handler(async () => {
+// Internal impl — callable from trusted server-side code (e.g. the cron route)
+// WITHOUT going through the auth-protected serverFn RPC layer.
+export async function refreshAllMonitoredUrlsImpl() {
   const { data: rows, error } = await supabaseAdmin
     .from("monitored_urls")
     .select("id, url, hint, title, last_seen_dates");
@@ -187,7 +189,11 @@ export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handle
     results.push(await refreshOneMonitor(r));
   }
   return { count: results.length, results };
-});
+}
+
+export const refreshAllMonitoredUrls = createServerFn({ method: "POST" }).handler(
+  async () => refreshAllMonitoredUrlsImpl(),
+);
 
 export const listMonitorSuggestions = createServerFn({ method: "GET" }).handler(async () => {
   const nowIso = new Date().toISOString();

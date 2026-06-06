@@ -1,22 +1,40 @@
 import { createFileRoute } from "@tanstack/react-router";
-import { refreshAllMonitoredUrls } from "@/lib/monitors.functions";
-import { refreshAllMonitoredActivities } from "@/lib/activities.functions";
+import { refreshAllMonitoredUrlsImpl } from "@/lib/monitors.functions";
+import { refreshAllMonitoredActivitiesImpl } from "@/lib/activities.functions";
 
-// Weekly cron — called by pg_cron. Public route; security is the secret URL
-// plus the Lovable Cloud anon key in the apikey header.
+// Weekly cron — called by pg_cron. Authenticated via the Supabase publishable
+// (anon) key in the `apikey` header, validated server-side here.
+function isAuthorized(request: Request): boolean {
+  const expected = process.env.SUPABASE_PUBLISHABLE_KEY;
+  if (!expected) return false;
+  const provided =
+    request.headers.get("apikey") ||
+    request.headers.get("authorization")?.replace(/^Bearer\s+/i, "") ||
+    "";
+  if (!provided || provided.length !== expected.length) return false;
+  // constant-time-ish comparison
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) {
+    diff |= expected.charCodeAt(i) ^ provided.charCodeAt(i);
+  }
+  return diff === 0;
+}
+
 export const Route = createFileRoute("/api/public/cron/refresh-monitors")({
   server: {
     handlers: {
-      POST: async () => runRefresh(),
-      GET: async () => runRefresh(),
+      POST: async ({ request }) =>
+        isAuthorized(request) ? runRefresh() : new Response("Unauthorized", { status: 401 }),
+      GET: async ({ request }) =>
+        isAuthorized(request) ? runRefresh() : new Response("Unauthorized", { status: 401 }),
     },
   },
 });
 
 async function runRefresh() {
   const [monitoredUrls, monitoredActivities] = await Promise.allSettled([
-    refreshAllMonitoredUrls(),
-    refreshAllMonitoredActivities(),
+    refreshAllMonitoredUrlsImpl(),
+    refreshAllMonitoredActivitiesImpl(),
   ]);
   return Response.json({
     ok: true,
