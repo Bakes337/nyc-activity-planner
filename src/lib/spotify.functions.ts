@@ -30,14 +30,12 @@ export const getSpotifyStatus = createServerFn({ method: "GET" }).handler(async 
   };
 });
 
-export const getSpotifyAuthUrl = createServerFn({ method: "GET" }).handler(async () => {
+export const getSpotifyAuthUrl = createServerFn({ method: "POST" })
+  .inputValidator((input: { origin: string }) => input)
+  .handler(async ({ data }) => {
   const { SPOTIFY_SCOPES, getSpotifyEnv, getRedirectUri } = await import("@/lib/spotify.server");
-  const { getRequestHost, getRequestHeader } = await import("@tanstack/react-start/server");
   const { clientId } = getSpotifyEnv();
-  const host = getRequestHost();
-  const proto = getRequestHeader("x-forwarded-proto") || "https";
-  const origin = `${proto}://${host}`;
-  const redirectUri = getRedirectUri(origin);
+  const redirectUri = getRedirectUri(data.origin);
   const state = crypto.randomUUID();
   const params = new URLSearchParams({
     client_id: clientId,
