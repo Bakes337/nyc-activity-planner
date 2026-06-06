@@ -91,7 +91,7 @@
   --muted-foreground: #4A5A6B;
   --accent: var(--neon-pink);
   --accent-foreground: #FFFFFF;
-  --destructive: #B91C1C;
+  --destructive: #A21CAF;
   --destructive-foreground: #FFFFFF;
   --border: #DDD3B5;
   --input: #DDD3B5;
@@ -116,7 +116,7 @@
   --cat-comedy: var(--mint);
   --cat-art: var(--forest);
   --cat-outdoors: var(--teal);
-  --cat-theater: #6B1422;
+  --cat-theater: #6D28D9;
   --cat-film: var(--neon-coral);
 }
 
