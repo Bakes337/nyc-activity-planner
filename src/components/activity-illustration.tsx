@@ -32,12 +32,7 @@ type IllustrationKey =
   | "dining"
   | "musicNote"
   | "foodFork"
-  | "comedy"
-  | "culture"
-  | "crafts"
-  | "active"
-  | "theater"
-  | "film";
+  ;
 
 const KEYWORDS: { match: RegExp; key: IllustrationKey }[] = [
   { match: /jean|sew|denim|tailor|stitch|quilt/i, key: "sewing" },
@@ -374,16 +369,7 @@ const ILLUSTRATIONS: Record<IllustrationKey, React.ReactNode> = {
       <circle cx="100" cy="50" r="6" fill={FILL_PINK} />
     </g>
   ),
-  comedy: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
-  culture: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
-  crafts: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
-  active: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
-  theater: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
-  film: <g>{ILLUSTRATIONS_PLACEHOLDER}</g>,
 };
-
-// (unused — kept so all category fallbacks resolve; not actually rendered)
-const ILLUSTRATIONS_PLACEHOLDER = null;
 
 export function ActivityIllustration({ activity }: { activity: Activity }) {
   const key = pickIllustration(activity);
