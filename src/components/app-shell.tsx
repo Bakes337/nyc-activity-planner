@@ -6,7 +6,7 @@ const TABS = [
   { to: "/", label: "Library", Icon: Library },
   { to: "/calendar", label: "Calendar", Icon: Calendar },
   { to: "/chat", label: "Chat", Icon: MessageCircle },
-  { to: "/playlists", label: "Playlists", Icon: Music },
+  { to: "/playlists", label: "Concerts", Icon: Music },
 ] as const;
 
 export function AppShell({ children }: { children: ReactNode }) {

@@ -3,7 +3,7 @@ import { AppShell, PageHeader } from "../components/app-shell";
 import { ACTIVITIES, nextDate } from "../lib/data";
 
 export const Route = createFileRoute("/playlists")({
-  head: () => ({ meta: [{ title: "Playlists — Activity Planner" }] }),
+  head: () => ({ meta: [{ title: "Concerts — Activity Planner" }] }),
   component: PlaylistsPage,
 });
 
