@@ -76,11 +76,15 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { title: "Activity Planner — NYC ideas, all in one place" },
       { name: "description", content: "A personal planner for bookmarked NYC events, restaurants, shows, and activities." },
       { name: "author", content: "Lovable" },
-      { property: "og:title", content: "Activity Planner" },
+      { property: "og:title", content: "Activity Planner — NYC ideas, all in one place" },
       { property: "og:description", content: "A personal planner for bookmarked NYC events, restaurants, shows, and activities." },
       { property: "og:type", content: "website" },
       { name: "twitter:card", content: "summary" },
       { name: "twitter:site", content: "@Lovable" },
+      { name: "twitter:title", content: "Activity Planner — NYC ideas, all in one place" },
+      { name: "twitter:description", content: "A personal planner for bookmarked NYC events, restaurants, shows, and activities." },
+      { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a32caeed-1adb-4687-82e6-527073ba13c5/id-preview-879d71c7--1c3fa34b-2738-4fbf-a707-d092a9966be7.lovable.app-1780765486864.png" },
+      { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a32caeed-1adb-4687-82e6-527073ba13c5/id-preview-879d71c7--1c3fa34b-2738-4fbf-a707-d092a9966be7.lovable.app-1780765486864.png" },
     ],
     links: [
       {
