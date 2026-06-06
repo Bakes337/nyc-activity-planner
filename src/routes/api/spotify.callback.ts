@@ -1,4 +1,11 @@
-import { createFileRoute, redirect } from "@tanstack/react-router";
+import { createFileRoute } from "@tanstack/react-router";
+
+function redirectTo(origin: string, status: "connected" | "error") {
+  return new Response(null, {
+    status: 302,
+    headers: { Location: `${origin}/playlists?spotify=${status}` },
+  });
+}
 
 export const Route = createFileRoute("/api/spotify/callback")({
   server: {
@@ -11,7 +18,7 @@ export const Route = createFileRoute("/api/spotify/callback")({
         const origin = `${url.protocol}//${url.host}`;
 
         if (error || !code) {
-          throw redirect({ to: "/playlists", search: { spotify: "error" } as never });
+          return redirectTo(origin, "error");
         }
 
         try {
@@ -46,12 +53,10 @@ export const Route = createFileRoute("/api/spotify/callback")({
             await supabaseAdmin.from("spotify_connection").insert(payload);
           }
 
-          throw redirect({ to: "/playlists", search: { spotify: "connected" } as never });
+          return redirectTo(origin, "connected");
         } catch (e) {
-          // Re-throw redirects, swallow API errors into the UI.
-          if (e && typeof e === "object" && "to" in e) throw e;
           console.error("[spotify callback]", e);
-          throw redirect({ to: "/playlists", search: { spotify: "error" } as never });
+          return redirectTo(origin, "error");
         }
       },
     },
