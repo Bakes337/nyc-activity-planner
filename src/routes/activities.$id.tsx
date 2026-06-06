@@ -10,7 +10,7 @@ import {
   formatTime,
   seedGradient,
 } from "../lib/data";
-import { listActivities, deleteActivity } from "../lib/activities.functions";
+import { listActivities, deleteActivity, refreshActivityDates } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
 import { getActivityTravel } from "../lib/location.functions";
 
@@ -38,7 +38,9 @@ function ActivityDetailPage() {
   const fetchList = useServerFn(listActivities);
   const del = useServerFn(deleteActivity);
   const fetchTravel = useServerFn(getActivityTravel);
+  const refresh = useServerFn(refreshActivityDates);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
+  const [refreshError, setRefreshError] = useState<string | null>(null);
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
@@ -62,6 +64,14 @@ function ActivityDetailPage() {
       await qc.invalidateQueries({ queryKey: ["activities"] });
       router.navigate({ to: "/" });
     },
+  });
+
+  const refreshMut = useMutation({
+    mutationFn: () => refresh({ data: { id } }),
+    onMutate: () => setRefreshError(null),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["activities"] }),
+    onError: (e: unknown) =>
+      setRefreshError(e instanceof Error ? e.message : "Couldn't refresh dates."),
   });
 
   if (isLoading) {
@@ -177,7 +187,21 @@ function ActivityDetailPage() {
         <TravelFromHome loading={travelLoading} resp={travelResp} />
 
         <section className="mt-6">
-          <h2 className="font-display text-xl">Upcoming dates</h2>
+          <div className="flex items-center justify-between">
+            <h2 className="font-display text-xl">Upcoming dates</h2>
+            {activity.sourceUrl && (
+              <button
+                onClick={() => refreshMut.mutate()}
+                disabled={refreshMut.isPending}
+                className="rounded-full border border-[color:var(--border)] bg-white/80 px-3 py-1 text-[11px] font-semibold text-[color:var(--ink)] disabled:opacity-60"
+              >
+                {refreshMut.isPending ? "Refreshing…" : "↻ Refresh"}
+              </button>
+            )}
+          </div>
+          {refreshError && (
+            <p className="mt-1 text-xs text-[color:var(--neon-pink)]">{refreshError}</p>
+          )}
           {upcoming.length === 0 ? (
             <p className="mt-2 text-sm italic text-[color:var(--muted-foreground)]">
               {activity.kind === "timeless"
