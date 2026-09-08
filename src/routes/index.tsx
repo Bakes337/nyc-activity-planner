@@ -221,11 +221,11 @@ function Index() {
             <label className="flex cursor-pointer items-center gap-1.5">
               <input
                 type="checkbox"
-                checked={hideSoldOut}
-                onChange={(e) => setHideSoldOut(e.target.checked)}
+                checked={hideDone}
+                onChange={(e) => setHideDone(e.target.checked)}
                 className="h-3.5 w-3.5 accent-[color:var(--cobalt)]"
               />
-              Hide sold-out
+              Hide ones I've done
             </label>
           </div>
         </div>
@@ -233,8 +233,13 @@ function Index() {
 
       <main className="grid grid-cols-1 gap-4 px-5 pb-6 pt-3 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-4">
         {filtered.map((a) => (
-          <ActivityCard key={a.id} a={a} />
+          <ActivityCard
+            key={a.id}
+            a={a}
+            onMarkDone={() => setRating({ id: a.id, title: a.title })}
+          />
         ))}
+
         {filtered.length === 0 && !isLoading && (
           <p className="col-span-full mt-6 text-center text-sm text-[color:var(--muted-foreground)]">
             {activities.length === 0
