@@ -111,18 +111,22 @@ function fromLocalInput(v: string): string {
 
 function AddPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const sharedUrl = "url" in search ? (search.url as string) : "";
   const parseFn = useServerFn(parseActivityUrl);
   const saveFn = useServerFn(createActivity);
 
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(sharedUrl);
   const [hint, setHint] = useState("");
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const autoParsed = useRef(false);
 
-  async function handleParse() {
-    if (!url.trim()) {
+  async function handleParse(overrideUrl?: string) {
+    const target = (overrideUrl ?? url).trim();
+    if (!target) {
       setError("Paste a link first.");
       return;
     }
@@ -131,7 +135,7 @@ function AddPage() {
     try {
       const parsed = await parseFn({
         data: {
-          url: url.trim(),
+          url: target,
           hint: hint.trim() || undefined,
         },
       });
@@ -142,6 +146,15 @@ function AddPage() {
       setParsing(false);
     }
   }
+
+  useEffect(() => {
+    if (!sharedUrl || autoParsed.current) return;
+    autoParsed.current = true;
+    setUrl(sharedUrl);
+    void handleParse(sharedUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedUrl]);
+
 
   async function handleSave() {
     if (!draft) return;
