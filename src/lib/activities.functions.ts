@@ -706,6 +706,77 @@ export const deleteActivity = createServerFn({ method: "POST" })
     return { ok: true };
   });
 
+// ---------- Mark done + rate ----------
+
+export const markActivityDone = createServerFn({ method: "POST" })
+  .inputValidator(
+    z.object({
+      id: z.string().uuid(),
+      rating: z.number().int().min(1).max(4),
+      notes: z.string().max(2000).optional().nullable(),
+      doneAt: z.string().optional().nullable(),
+    }),
+  )
+  .handler(async ({ data }) => {
+    const doneAt = data.doneAt ? new Date(data.doneAt).toISOString() : new Date().toISOString();
+    const notes = data.notes?.trim() ? data.notes.trim() : null;
+
+    const { data: row, error: readErr } = await supabaseAdmin
+      .from("activities")
+      .select("id, title, category, venue, neighborhood, tags")
+      .eq("id", data.id)
+      .single();
+    if (readErr || !row) throw new Error(readErr?.message ?? "Activity not found");
+
+    const { error } = await supabaseAdmin
+      .from("activities")
+      .update({
+        done_at: doneAt,
+        rating: data.rating,
+        rating_notes: notes,
+        status: "visited",
+      })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+
+    // Append to the ratings history used to improve future recommendations.
+    const { error: logErr } = await supabaseAdmin.from("activity_ratings").insert({
+      activity_id: row.id,
+      activity_title: row.title,
+      category: row.category ?? "",
+      venue: row.venue ?? "",
+      neighborhood: row.neighborhood ?? "",
+      tags: row.tags ?? [],
+      rating: data.rating,
+      notes,
+      done_at: doneAt,
+    });
+    if (logErr) throw new Error(logErr.message);
+
+    return { ok: true };
+  });
+
+export const unmarkActivityDone = createServerFn({ method: "POST" })
+  .inputValidator(z.object({ id: z.string().uuid() }))
+  .handler(async ({ data }) => {
+    const { error } = await supabaseAdmin
+      .from("activities")
+      .update({ done_at: null, rating: null, rating_notes: null, status: "idea" })
+      .eq("id", data.id);
+    if (error) throw new Error(error.message);
+    return { ok: true };
+  });
+
+export const listActivityRatings = createServerFn({ method: "GET" }).handler(async () => {
+  const { data, error } = await supabaseAdmin
+    .from("activity_ratings")
+    .select("*")
+    .order("done_at", { ascending: false });
+  if (error) throw new Error(error.message);
+  return data ?? [];
+});
+
+
 async function refreshActivityDatesImpl(input: { id: string }) {
   const { data: row, error } = await supabaseAdmin
       .from("activities")
