@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import { CATEGORY_META, type Category } from "../lib/data";
 import {
@@ -9,10 +9,24 @@ import {
   type ParsedActivity,
 } from "../lib/activities.functions";
 
+function firstUrlIn(value: string): string {
+  const match = value.match(/https?:\/\/\S+/);
+  return match ? match[0] : "";
+}
+
 export const Route = createFileRoute("/add")({
+  // Lets an iOS Shortcut / Android share target hand a link straight to this page.
+  validateSearch: (search: Record<string, unknown>) => {
+    const raw = [search["url"], search["text"], search["link"]]
+      .map((v) => (typeof v === "string" ? v : ""))
+      .find((v) => v.trim().length > 0);
+    const shared = raw ? firstUrlIn(raw.trim()) || raw.trim() : "";
+    return shared ? { url: shared } : {};
+  },
   head: () => ({ meta: [{ title: "Add — Activity Planner" }] }),
   component: AddPage,
 });
+
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 const PRICE_TIERS = ["free", "$", "$$", "$$$"] as const;
@@ -97,18 +111,22 @@ function fromLocalInput(v: string): string {
 
 function AddPage() {
   const navigate = useNavigate();
+  const search = Route.useSearch();
+  const sharedUrl = "url" in search ? (search.url as string) : "";
   const parseFn = useServerFn(parseActivityUrl);
   const saveFn = useServerFn(createActivity);
 
-  const [url, setUrl] = useState("");
+  const [url, setUrl] = useState(sharedUrl);
   const [hint, setHint] = useState("");
   const [parsing, setParsing] = useState(false);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [draft, setDraft] = useState<Draft | null>(null);
+  const autoParsed = useRef(false);
 
-  async function handleParse() {
-    if (!url.trim()) {
+  async function handleParse(overrideUrl?: string) {
+    const target = (overrideUrl ?? url).trim();
+    if (!target) {
       setError("Paste a link first.");
       return;
     }
@@ -117,7 +135,7 @@ function AddPage() {
     try {
       const parsed = await parseFn({
         data: {
-          url: url.trim(),
+          url: target,
           hint: hint.trim() || undefined,
         },
       });
@@ -128,6 +146,15 @@ function AddPage() {
       setParsing(false);
     }
   }
+
+  useEffect(() => {
+    if (!sharedUrl || autoParsed.current) return;
+    autoParsed.current = true;
+    setUrl(sharedUrl);
+    void handleParse(sharedUrl);
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [sharedUrl]);
+
 
   async function handleSave() {
     if (!draft) return;
@@ -195,7 +222,7 @@ function AddPage() {
             />
             <button
               type="button"
-              onClick={handleParse}
+              onClick={() => handleParse()}
               disabled={parsing}
               className="rounded-full bg-[color:var(--cobalt)] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[color:var(--cream)] disabled:opacity-60"
             >
