@@ -7,9 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
+import { appleSplashLinks } from "../lib/ios-splash";
+import { registerServiceWorker } from "../lib/pwa";
 import { AuthGate } from "../components/auth-gate";
+
 
 function NotFoundComponent() {
   return (
@@ -85,6 +89,11 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
       { name: "twitter:description", content: "A personal planner for bookmarked NYC events, restaurants, shows, and activities." },
       { property: "og:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a32caeed-1adb-4687-82e6-527073ba13c5/id-preview-879d71c7--1c3fa34b-2738-4fbf-a707-d092a9966be7.lovable.app-1780765486864.png" },
       { name: "twitter:image", content: "https://pub-bb2e103a32db4e198524a2e9ed8f35b4.r2.dev/a32caeed-1adb-4687-82e6-527073ba13c5/id-preview-879d71c7--1c3fa34b-2738-4fbf-a707-d092a9966be7.lovable.app-1780765486864.png" },
+      { name: "theme-color", content: "#1E3A8A" },
+      { name: "mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-capable", content: "yes" },
+      { name: "apple-mobile-web-app-status-bar-style", content: "default" },
+      { name: "apple-mobile-web-app-title", content: "NYC Planner" },
     ],
     links: [
       {
@@ -92,7 +101,9 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: appCss,
       },
       { rel: "icon", type: "image/png", href: "/favicon.png" },
-      { rel: "apple-touch-icon", href: "/favicon.png" },
+      { rel: "manifest", href: "/manifest.webmanifest" },
+      { rel: "apple-touch-icon", sizes: "180x180", href: "/icons/apple-touch-icon.png" },
+      ...appleSplashLinks,
       { rel: "preconnect", href: "https://fonts.googleapis.com" },
       { rel: "preconnect", href: "https://fonts.gstatic.com", crossOrigin: "anonymous" },
       {
@@ -100,6 +111,7 @@ export const Route = createRootRouteWithContext<{ queryClient: QueryClient }>()(
         href: "https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Cabin:wght@400;500;600;700&display=swap",
       },
     ],
+
   }),
   shellComponent: RootShell,
   component: RootComponent,
@@ -123,6 +135,12 @@ function RootShell({ children }: { children: React.ReactNode }) {
 
 function RootComponent() {
   const { queryClient } = Route.useRouteContext();
+
+  useEffect(() => {
+    registerServiceWorker();
+  }, []);
+
+
 
   return (
     <QueryClientProvider client={queryClient}>
