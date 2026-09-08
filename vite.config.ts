@@ -23,6 +23,7 @@ export default defineConfig({
         // Never emit or register a service worker in dev / Lovable preview.
         devOptions: { enabled: false },
         filename: "sw.js",
+        outDir: "dist/client",
         manifest: {
           name: "NYC Activity Planner",
           short_name: "NYC Planner",
@@ -47,7 +48,8 @@ export default defineConfig({
           ],
         },
         workbox: {
-          globPatterns: ["**/*.{js,css,html,ico,png,svg,webmanifest,woff2}"],
+          globPatterns: ["**/*.{js,css,html,svg,webmanifest}", "icons/*.png", "favicon.png"],
+          globIgnores: ["**/splash/**"],
           navigateFallbackDenylist: [/^\/~oauth/, /^\/api\//],
           cleanupOutdatedCaches: true,
           clientsClaim: true,
