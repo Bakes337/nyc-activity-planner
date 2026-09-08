@@ -7,9 +7,13 @@ import {
   HeadContent,
   Scripts,
 } from "@tanstack/react-router";
+import { useEffect } from "react";
 
 import appCss from "../styles.css?url";
+import { appleSplashLinks } from "../lib/ios-splash";
+import { registerServiceWorker } from "../lib/pwa";
 import { AuthGate } from "../components/auth-gate";
+
 
 function NotFoundComponent() {
   return (
