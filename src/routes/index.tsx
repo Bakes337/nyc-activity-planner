@@ -253,7 +253,18 @@ function Index() {
           </p>
         )}
       </main>
+
+      {rating && (
+        <RatingDialog
+          title={rating.title}
+          busy={markMut.isPending}
+          error={markMut.error instanceof Error ? markMut.error.message : null}
+          onCancel={() => setRating(null)}
+          onSave={(value, notes) => markMut.mutate({ id: rating.id, rating: value, notes })}
+        />
+      )}
     </AppShell>
+
   );
 }
 
