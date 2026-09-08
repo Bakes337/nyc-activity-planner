@@ -99,7 +99,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
               onMarkDone();
             }}
             aria-label="Mark done"
-            className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md border border-[color:var(--border)] bg-[color:var(--cream)]/80 text-[color:var(--forest)] opacity-60 shadow-sm transition hover:opacity-100 hover:ring-1 hover:ring-[color:var(--forest)]/30"
+            className="absolute bottom-4 right-4 flex h-6 w-6 items-center justify-center rounded-md border border-[color:var(--border)] bg-[color:var(--cream)]/80 text-[color:var(--forest)] opacity-60 shadow-sm transition hover:opacity-100 hover:ring-1 hover:ring-[color:var(--forest)]/30"
           >
             <svg
               width="14"
