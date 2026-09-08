@@ -249,8 +249,65 @@ function ActivityDetailPage() {
           </section>
         )}
 
+        <section className="mt-8 paint-card space-y-2 p-4">
+          <h2 className="font-display text-xl">Been there?</h2>
+          {activity.doneAt ? (
+            <>
+              <p className="text-sm text-[color:var(--ink)]">
+                Marked done {new Date(activity.doneAt).toLocaleDateString()}
+                {activity.rating ? ` · rated ${activity.rating}/4` : ""}
+              </p>
+              {activity.ratingNotes && (
+                <p className="rounded-xl bg-white/80 px-3 py-2 text-sm text-[color:var(--muted-foreground)]">
+                  {activity.ratingNotes}
+                </p>
+              )}
+              <div className="flex gap-2 pt-1">
+                <button
+                  onClick={() => setRatingOpen(true)}
+                  className="rounded-full bg-[color:var(--cobalt)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-[color:var(--cream)]"
+                >
+                  Edit rating
+                </button>
+                <button
+                  onClick={() => unmarkMut.mutate()}
+                  disabled={unmarkMut.isPending}
+                  className="rounded-full border border-[color:var(--border)] bg-white px-4 py-2 text-xs font-bold text-[color:var(--ink)] disabled:opacity-60"
+                >
+                  {unmarkMut.isPending ? "…" : "Undo done"}
+                </button>
+              </div>
+            </>
+          ) : (
+            <>
+              <p className="text-xs text-[color:var(--muted-foreground)]">
+                Mark it done and rate it 1–4 so future suggestions get smarter.
+              </p>
+              <button
+                onClick={() => setRatingOpen(true)}
+                className="rounded-full bg-[color:var(--neon-pink)] px-4 py-2 text-xs font-bold uppercase tracking-wide text-white"
+              >
+                ✓ Mark as done
+              </button>
+            </>
+          )}
+        </section>
+
+        {ratingOpen && (
+          <RatingDialog
+            title={activity.title}
+            initialRating={activity.rating}
+            initialNotes={activity.ratingNotes}
+            busy={markMut.isPending}
+            error={markMut.error instanceof Error ? markMut.error.message : null}
+            onCancel={() => setRatingOpen(false)}
+            onSave={(value, notes) => markMut.mutate({ rating: value, notes })}
+          />
+        )}
+
         <div className="mt-8 flex flex-col gap-2">
           {activity.sourceUrl && (
+
             <a
               href={activity.sourceUrl}
               target="_blank"
