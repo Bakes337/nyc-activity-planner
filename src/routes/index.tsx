@@ -67,8 +67,10 @@ function isThisMonth(d: Date) {
 }
 
 function Index() {
+  const qc = useQueryClient();
   const fetchList = useServerFn(listActivities);
   const fetchSuggestions = useServerFn(listSuggestions);
+
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
     queryFn: () => fetchList(),
