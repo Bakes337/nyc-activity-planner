@@ -28,7 +28,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
         <ActivityIllustration activity={a} />
       </div>
 
-      <div className="relative flex flex-1 flex-col gap-1.5 p-4 pr-12">
+      <div className="relative flex flex-1 flex-col gap-1.5 px-4 pt-4 pb-11">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 rounded-full bg-[color:var(--cream)]/95 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--ink)] shadow-sm ring-1 ring-[color:var(--border)]">
             <span
@@ -73,7 +73,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
 
       {done ? (
         <div
-          className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--forest)] text-[color:var(--cream)] shadow-sm"
+          className="absolute bottom-4 right-4 flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--forest)] text-[color:var(--cream)] shadow-sm"
           title={`Done${a.rating ? ` · ${a.rating}/4` : ""}`}
         >
           <svg
@@ -99,7 +99,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
               onMarkDone();
             }}
             aria-label="Mark done"
-            className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md border border-[color:var(--border)] bg-[color:var(--cream)]/80 text-[color:var(--forest)] opacity-60 shadow-sm transition hover:opacity-100 hover:ring-1 hover:ring-[color:var(--forest)]/30"
+            className="absolute bottom-4 right-4 flex h-6 w-6 items-center justify-center rounded-md border border-[color:var(--border)] bg-[color:var(--cream)]/80 text-[color:var(--forest)] opacity-60 shadow-sm transition hover:opacity-100 hover:ring-1 hover:ring-[color:var(--forest)]/30"
           >
             <svg
               width="14"
