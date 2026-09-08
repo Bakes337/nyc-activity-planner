@@ -1,6 +1,6 @@
 import { createFileRoute, useNavigate } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useState } from "react";
+import { useEffect, useRef, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import { CATEGORY_META, type Category } from "../lib/data";
 import {
