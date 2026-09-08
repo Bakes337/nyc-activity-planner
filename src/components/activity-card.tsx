@@ -28,7 +28,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
         <ActivityIllustration activity={a} />
       </div>
 
-      <div className="relative flex flex-1 flex-col gap-1.5 p-4 pr-12">
+      <div className="relative flex flex-1 flex-col gap-1.5 px-4 pt-4 pb-11">
         <div className="flex items-center justify-between">
           <div className="flex items-center gap-1.5 rounded-full bg-[color:var(--cream)]/95 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--ink)] shadow-sm ring-1 ring-[color:var(--border)]">
             <span
