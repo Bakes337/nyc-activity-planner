@@ -10,10 +10,11 @@ import {
 } from "../lib/data";
 import { ActivityIllustration } from "./activity-illustration";
 
-export function ActivityCard({ a }: { a: Activity }) {
+export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () => void }) {
   const meta = categoryMeta(a.category);
   const next = nextDate(a);
   const soldOut = next?.isSoldOut;
+  const done = Boolean(a.doneAt);
 
   return (
     <Link
@@ -38,12 +39,32 @@ export function ActivityCard({ a }: { a: Activity }) {
         <div className="absolute right-3 top-3 rounded-full bg-[color:var(--ink)]/85 px-2.5 py-1 text-[11px] font-bold uppercase tracking-wider text-[color:var(--cream)]">
           {a.priceTier}
         </div>
-        {soldOut && (
+        {soldOut && !done && (
           <div className="absolute inset-x-3 bottom-3 rounded-md bg-[color:var(--ink)]/85 px-2 py-1 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--neon-pink)]">
             Next date sold out
           </div>
         )}
+        {done ? (
+          <div className="absolute inset-x-3 bottom-3 rounded-md bg-[color:var(--forest)] px-2 py-1 text-center text-[11px] font-bold uppercase tracking-[0.18em] text-[color:var(--cream)]">
+            Done{a.rating ? ` · ${a.rating}/4` : ""}
+          </div>
+        ) : (
+          onMarkDone && (
+            <button
+              type="button"
+              onClick={(e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                onMarkDone();
+              }}
+              className="absolute bottom-3 right-3 rounded-full bg-[color:var(--cream)]/95 px-3 py-1 text-[11px] font-bold text-[color:var(--cobalt)] shadow-sm transition hover:bg-white"
+            >
+              ✓ Mark done
+            </button>
+          )
+        )}
       </div>
+
 
       <div className="relative flex flex-1 flex-col gap-1 p-4">
         <h3 className="font-display text-xl leading-tight text-[color:var(--ink)]">
