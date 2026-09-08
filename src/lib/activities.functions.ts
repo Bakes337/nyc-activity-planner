@@ -580,6 +580,11 @@ ${markdown.slice(0, 8000)}`;
           : null,
     };
 
+    // Keep the $ / $$ / $$$ scale consistent with the stated price, when we have one.
+    const derived = tierFromPriceNote(payload.priceNote);
+    if (derived) payload.priceTier = derived;
+
+
     // Cache it (best-effort)
     await supabaseAdmin
       .from("scrape_cache")
