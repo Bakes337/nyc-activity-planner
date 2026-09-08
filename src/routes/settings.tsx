@@ -10,7 +10,7 @@ import {
   unfollowOrganizer,
   updateOrganizerFilters,
 } from "../lib/organizers.functions";
-import { getHomeProfile, saveHomeAddress } from "../lib/location.functions";
+import { getHomeProfile, saveHomeAddress, setShowSoldOut } from "../lib/location.functions";
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 type Borough = (typeof BOROUGHS)[number];
@@ -95,6 +95,13 @@ function SettingsPage() {
     onError: (e) => setHomeErr(e instanceof Error ? e.message : String(e)),
   });
 
+  const saveShowSoldOut = useServerFn(setShowSoldOut);
+  const soldOutMut = useMutation({
+    mutationFn: (showSoldOut: boolean) => saveShowSoldOut({ data: { showSoldOut } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["home-profile"] }),
+  });
+
+
   // Monitored URLs
   function toggleBorough(b: Borough) {
     const next = new Set(boroughs);
@@ -137,6 +144,24 @@ function SettingsPage() {
             {homeMut.isPending ? "Saving…" : home?.home_address ? "Update home" : "Save home"}
           </button>
         </section>
+
+        <section className="paint-card space-y-2 p-4">
+          <h2 className="font-display text-xl">Library display</h2>
+          <label className="flex cursor-pointer items-center gap-2 text-sm">
+            <input
+              type="checkbox"
+              checked={home?.show_sold_out ?? false}
+              onChange={(e) => soldOutMut.mutate(e.target.checked)}
+              className="h-4 w-4 accent-[color:var(--cobalt)]"
+            />
+            Show activities whose next date is sold out
+          </label>
+          <p className="text-xs text-[color:var(--muted-foreground)]">
+            Off by default — sold-out dates stay hidden in your library.
+          </p>
+        </section>
+
+
 
         <section className="paint-card space-y-3 p-4">
           <h2 className="font-display text-xl">Follow an organizer</h2>

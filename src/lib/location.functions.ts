@@ -39,12 +39,37 @@ async function geocode(address: string): Promise<{ lat: number; lng: number; for
 export const getHomeProfile = createServerFn({ method: "GET" }).handler(async () => {
   const { data, error } = await supabaseAdmin
     .from("user_profile")
-    .select("id, home_address, home_lat, home_lng")
+    .select("id, home_address, home_lat, home_lng, show_sold_out")
     .limit(1)
     .maybeSingle();
   if (error) throw new Error(error.message);
   return data ?? null;
 });
+
+export const setShowSoldOut = createServerFn({ method: "POST" })
+  .inputValidator((input) => z.object({ showSoldOut: z.boolean() }).parse(input))
+  .handler(async ({ data }) => {
+    const { data: existing } = await supabaseAdmin
+      .from("user_profile")
+      .select("id")
+      .limit(1)
+      .maybeSingle();
+
+    if (existing) {
+      const { error } = await supabaseAdmin
+        .from("user_profile")
+        .update({ show_sold_out: data.showSoldOut, updated_at: new Date().toISOString() })
+        .eq("id", existing.id);
+      if (error) throw new Error(error.message);
+    } else {
+      const { error } = await supabaseAdmin
+        .from("user_profile")
+        .insert({ show_sold_out: data.showSoldOut });
+      if (error) throw new Error(error.message);
+    }
+    return { showSoldOut: data.showSoldOut };
+  });
+
 
 export const saveHomeAddress = createServerFn({ method: "POST" })
   .inputValidator((input) =>

@@ -20,6 +20,7 @@ export type Database = {
           category: string
           created_at: string
           dates: Json
+          done_at: string | null
           duration_minutes: number | null
           id: string
           image_seed: string
@@ -30,6 +31,8 @@ export type Database = {
           notes: string | null
           price_note: string | null
           price_tier: string
+          rating: number | null
+          rating_notes: string | null
           source_url: string | null
           status: string
           tags: string[]
@@ -45,6 +48,7 @@ export type Database = {
           category?: string
           created_at?: string
           dates?: Json
+          done_at?: string | null
           duration_minutes?: number | null
           id?: string
           image_seed?: string
@@ -55,6 +59,8 @@ export type Database = {
           notes?: string | null
           price_note?: string | null
           price_tier?: string
+          rating?: number | null
+          rating_notes?: string | null
           source_url?: string | null
           status?: string
           tags?: string[]
@@ -70,6 +76,7 @@ export type Database = {
           category?: string
           created_at?: string
           dates?: Json
+          done_at?: string | null
           duration_minutes?: number | null
           id?: string
           image_seed?: string
@@ -80,6 +87,8 @@ export type Database = {
           notes?: string | null
           price_note?: string | null
           price_tier?: string
+          rating?: number | null
+          rating_notes?: string | null
           source_url?: string | null
           status?: string
           tags?: string[]
@@ -91,6 +100,59 @@ export type Database = {
           venue_lng?: number | null
         }
         Relationships: []
+      }
+      activity_ratings: {
+        Row: {
+          activity_id: string | null
+          activity_title: string
+          category: string
+          created_at: string
+          done_at: string
+          id: string
+          neighborhood: string
+          notes: string | null
+          rating: number
+          tags: string[]
+          updated_at: string
+          venue: string
+        }
+        Insert: {
+          activity_id?: string | null
+          activity_title?: string
+          category?: string
+          created_at?: string
+          done_at?: string
+          id?: string
+          neighborhood?: string
+          notes?: string | null
+          rating: number
+          tags?: string[]
+          updated_at?: string
+          venue?: string
+        }
+        Update: {
+          activity_id?: string | null
+          activity_title?: string
+          category?: string
+          created_at?: string
+          done_at?: string
+          id?: string
+          neighborhood?: string
+          notes?: string | null
+          rating?: number
+          tags?: string[]
+          updated_at?: string
+          venue?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "activity_ratings_activity_id_fkey"
+            columns: ["activity_id"]
+            isOneToOne: false
+            referencedRelation: "activities"
+            referencedColumns: ["id"]
+          },
+        ]
       }
       followed_organizers: {
         Row: {
@@ -364,6 +426,7 @@ export type Database = {
           home_lat: number | null
           home_lng: number | null
           id: string
+          show_sold_out: boolean
           updated_at: string
         }
         Insert: {
@@ -372,6 +435,7 @@ export type Database = {
           home_lat?: number | null
           home_lng?: number | null
           id?: string
+          show_sold_out?: boolean
           updated_at?: string
         }
         Update: {
@@ -380,6 +444,7 @@ export type Database = {
           home_lat?: number | null
           home_lng?: number | null
           id?: string
+          show_sold_out?: boolean
           updated_at?: string
         }
         Relationships: []

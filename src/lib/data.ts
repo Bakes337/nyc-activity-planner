@@ -44,6 +44,10 @@ export interface Activity {
   durationMinutes?: number;
   isMonitored?: boolean;
   lastMonitoredAt?: string;
+  doneAt?: string;
+  rating?: number;
+  ratingNotes?: string;
+
 }
 
 export const CATEGORY_META: Record<
