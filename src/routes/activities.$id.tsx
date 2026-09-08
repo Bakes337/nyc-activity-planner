@@ -158,6 +158,7 @@ function ActivityDetailPage() {
           className="relative aspect-[16/9] w-full overflow-hidden rounded-3xl"
           style={{ background: seedGradient(activity.imageSeed) }}
         >
+          <ActivityIllustration activity={activity} />
           <div className="absolute left-3 top-3 flex items-center gap-1.5 rounded-full bg-[color:var(--cream)]/95 px-2.5 py-1 text-[11px] font-semibold text-[color:var(--ink)] shadow-sm">
             <span
               className="cat-dot"
