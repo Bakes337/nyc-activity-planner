@@ -222,7 +222,7 @@ function AddPage() {
             />
             <button
               type="button"
-              onClick={handleParse}
+              onClick={() => handleParse()}
               disabled={parsing}
               className="rounded-full bg-[color:var(--cobalt)] px-4 py-2 text-xs font-bold uppercase tracking-wider text-[color:var(--cream)] disabled:opacity-60"
             >
