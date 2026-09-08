@@ -49,5 +49,8 @@ export function rowToActivity(r: ActivityRow): Activity {
     durationMinutes: r.duration_minutes ?? undefined,
     isMonitored: r.is_monitored ?? false,
     lastMonitoredAt: r.last_monitored_at ?? undefined,
+    doneAt: r.done_at ?? undefined,
+    rating: r.rating ?? undefined,
+    ratingNotes: r.rating_notes ?? undefined,
   };
 }
