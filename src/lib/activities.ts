@@ -22,7 +22,11 @@ export interface ActivityRow {
   updated_at: string;
   is_monitored?: boolean | null;
   last_monitored_at?: string | null;
+  done_at?: string | null;
+  rating?: number | null;
+  rating_notes?: string | null;
 }
+
 
 export function rowToActivity(r: ActivityRow): Activity {
   const datesArr = Array.isArray(r.dates) ? (r.dates as ActivityDate[]) : [];
