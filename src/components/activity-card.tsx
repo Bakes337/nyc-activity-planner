@@ -73,7 +73,7 @@ export function ActivityCard({ a, onMarkDone }: { a: Activity; onMarkDone?: () =
 
       {done ? (
         <div
-          className="absolute bottom-3 right-3 flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--forest)] text-[color:var(--cream)] shadow-sm"
+          className="absolute bottom-4 right-4 flex h-6 w-6 items-center justify-center rounded-md bg-[color:var(--forest)] text-[color:var(--cream)] shadow-sm"
           title={`Done${a.rating ? ` · ${a.rating}/4` : ""}`}
         >
           <svg
