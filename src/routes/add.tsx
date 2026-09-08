@@ -9,10 +9,24 @@ import {
   type ParsedActivity,
 } from "../lib/activities.functions";
 
+function firstUrlIn(value: string): string {
+  const match = value.match(/https?:\/\/\S+/);
+  return match ? match[0] : "";
+}
+
 export const Route = createFileRoute("/add")({
+  // Lets an iOS Shortcut / Android share target hand a link straight to this page.
+  validateSearch: (search: Record<string, unknown>) => {
+    const raw = [search["url"], search["text"], search["link"]]
+      .map((v) => (typeof v === "string" ? v : ""))
+      .find((v) => v.trim().length > 0);
+    const shared = raw ? firstUrlIn(raw.trim()) || raw.trim() : "";
+    return shared ? { url: shared } : {};
+  },
   head: () => ({ meta: [{ title: "Add — Activity Planner" }] }),
   component: AddPage,
 });
+
 
 const BOROUGHS = ["Manhattan", "Brooklyn", "Queens", "Bronx", "Staten Island"] as const;
 const PRICE_TIERS = ["free", "$", "$$", "$$$"] as const;
