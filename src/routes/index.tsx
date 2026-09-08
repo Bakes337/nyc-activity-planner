@@ -1,9 +1,10 @@
 import { createFileRoute } from "@tanstack/react-router";
 import { useServerFn } from "@tanstack/react-start";
-import { useQuery } from "@tanstack/react-query";
+import { useMutation, useQuery, useQueryClient } from "@tanstack/react-query";
 import { useMemo, useState } from "react";
 import { AppShell, PageHeader } from "../components/app-shell";
 import { ActivityCard } from "../components/activity-card";
+import { RatingDialog } from "../components/rating-dialog";
 import {
   CATEGORY_META,
   categoryMeta,
@@ -12,10 +13,12 @@ import {
   nextDate,
   isPassedOneTime,
 } from "../lib/data";
-import { listActivities } from "../lib/activities.functions";
+import { listActivities, markActivityDone } from "../lib/activities.functions";
+import { getHomeProfile } from "../lib/location.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
 import { listSuggestions } from "../lib/organizers.functions";
 import { Link } from "@tanstack/react-router";
+
 
 export const Route = createFileRoute("/")({
   head: () => ({
@@ -87,10 +90,26 @@ function Index() {
   const [cats, setCats] = useState<Set<Category>>(new Set());
   const [prices, setPrices] = useState<Set<PriceTier>>(new Set());
   const [when, setWhen] = useState<When>("any");
-  const [hideSoldOut, setHideSoldOut] = useState(true);
+  const [hideDone, setHideDone] = useState(true);
+  const [rating, setRating] = useState<{ id: string; title: string } | null>(null);
+
+  const getHome = useServerFn(getHomeProfile);
+  const { data: profile } = useQuery({ queryKey: ["home-profile"], queryFn: () => getHome() });
+  const hideSoldOut = !(profile?.show_sold_out ?? false);
+
+  const markDone = useServerFn(markActivityDone);
+  const markMut = useMutation({
+    mutationFn: (vars: { id: string; rating: number; notes: string }) =>
+      markDone({ data: { id: vars.id, rating: vars.rating, notes: vars.notes } }),
+    onSuccess: async () => {
+      setRating(null);
+      await qc.invalidateQueries({ queryKey: ["activities"] });
+    },
+  });
 
   const filtered = useMemo(() => {
     return activities.filter((a) => {
+      if (hideDone && a.doneAt) return false;
       if (cats.size > 0 && !cats.has(a.category)) return false;
       if (prices.size > 0 && !prices.has(a.priceTier)) return false;
       if (query) {
@@ -113,7 +132,8 @@ function Index() {
       }
       return true;
     });
-  }, [activities, query, cats, prices, when, hideSoldOut]);
+  }, [activities, query, cats, prices, when, hideSoldOut, hideDone]);
+
 
   function toggle<T>(set: Set<T>, v: T, setter: (s: Set<T>) => void) {
     const next = new Set(set);
