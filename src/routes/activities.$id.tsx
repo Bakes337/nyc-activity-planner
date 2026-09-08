@@ -19,6 +19,7 @@ import {
 } from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
 import { RatingDialog } from "../components/rating-dialog";
+import { ActivityIllustration } from "../components/activity-illustration";
 import { getActivityTravel } from "../lib/location.functions";
 
 
