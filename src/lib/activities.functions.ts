@@ -580,6 +580,11 @@ ${markdown.slice(0, 8000)}`;
           : null,
     };
 
+    // Keep the $ / $$ / $$$ scale consistent with the stated price, when we have one.
+    const derived = tierFromPriceNote(payload.priceNote);
+    if (derived) payload.priceTier = derived;
+
+
     // Cache it (best-effort)
     await supabaseAdmin
       .from("scrape_cache")
@@ -853,3 +858,26 @@ export async function refreshAllMonitoredActivitiesImpl() {
 export const refreshAllMonitoredActivities = createServerFn({ method: "POST" }).handler(
   async () => refreshAllMonitoredActivitiesImpl(),
 );
+/**
+ * Derive the $ scale from a stated price so it stays consistent everywhere:
+ * free = $0 / "free", $ = under $50, $$ = $50–$250, $$$ = over $250.
+ * Returns null when no amount can be read from the note.
+ */
+export function tierFromPriceNote(
+  note: string | null | undefined,
+): "free" | "$" | "$$" | "$$$" | null {
+  if (!note) return null;
+  const text = note.toLowerCase();
+  const amounts = [...text.matchAll(/\$\s*([\d,]+(?:\.\d+)?)/g)]
+    .map((m) => Number(m[1].replace(/,/g, "")))
+    .filter((n) => Number.isFinite(n));
+  if (amounts.length === 0) {
+    if (/\b(free|no charge|donation|pay what you wish|byo)\b/.test(text)) return "free";
+    return null;
+  }
+  const max = Math.max(...amounts);
+  if (max === 0) return "free";
+  if (max < 50) return "$";
+  if (max <= 250) return "$$";
+  return "$$$";
+}
