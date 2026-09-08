@@ -10,9 +10,17 @@ import {
   formatTime,
   seedGradient,
 } from "../lib/data";
-import { listActivities, deleteActivity, refreshActivityDates } from "../lib/activities.functions";
+import {
+  listActivities,
+  deleteActivity,
+  refreshActivityDates,
+  markActivityDone,
+  unmarkActivityDone,
+} from "../lib/activities.functions";
 import { rowToActivity, type ActivityRow } from "../lib/activities";
+import { RatingDialog } from "../components/rating-dialog";
 import { getActivityTravel } from "../lib/location.functions";
+
 
 export const Route = createFileRoute("/activities/$id")({
   head: () => ({
@@ -41,6 +49,23 @@ function ActivityDetailPage() {
   const refresh = useServerFn(refreshActivityDates);
   const [confirmingDelete, setConfirmingDelete] = useState(false);
   const [refreshError, setRefreshError] = useState<string | null>(null);
+  const [ratingOpen, setRatingOpen] = useState(false);
+
+  const markDone = useServerFn(markActivityDone);
+  const unmarkDone = useServerFn(unmarkActivityDone);
+  const markMut = useMutation({
+    mutationFn: (vars: { rating: number; notes: string }) =>
+      markDone({ data: { id, rating: vars.rating, notes: vars.notes } }),
+    onSuccess: async () => {
+      setRatingOpen(false);
+      await qc.invalidateQueries({ queryKey: ["activities"] });
+    },
+  });
+  const unmarkMut = useMutation({
+    mutationFn: () => unmarkDone({ data: { id } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["activities"] }),
+  });
+
 
   const { data: rows = [], isLoading } = useQuery({
     queryKey: ["activities"],
