@@ -46,7 +46,13 @@ export default defineConfig({
               purpose: "maskable",
             },
           ],
+          share_target: {
+            action: "/add",
+            method: "GET",
+            params: { title: "title", text: "text", url: "url" },
+          },
         },
+
         workbox: {
           globPatterns: ["**/*.{js,css,html,svg,webmanifest}", "icons/*.png", "favicon.png"],
           globIgnores: ["**/splash/**"],
