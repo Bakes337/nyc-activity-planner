@@ -95,6 +95,13 @@ function SettingsPage() {
     onError: (e) => setHomeErr(e instanceof Error ? e.message : String(e)),
   });
 
+  const saveShowSoldOut = useServerFn(setShowSoldOut);
+  const soldOutMut = useMutation({
+    mutationFn: (showSoldOut: boolean) => saveShowSoldOut({ data: { showSoldOut } }),
+    onSuccess: () => qc.invalidateQueries({ queryKey: ["home-profile"] }),
+  });
+
+
   // Monitored URLs
   function toggleBorough(b: Borough) {
     const next = new Set(boroughs);
